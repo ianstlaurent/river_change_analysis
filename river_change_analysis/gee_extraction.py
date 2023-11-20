@@ -1,5 +1,8 @@
 import ee
-from io import StringIO
+try:
+    from StringIO import StringIO ## for Python 2
+except ImportError:
+    from io import StringIO ## for Python 3
 
 def authenticate_gee():
     try:
