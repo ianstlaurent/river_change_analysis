@@ -1,4 +1,5 @@
 import ee
+from io import StringIO
 
 def authenticate_gee():
     try:

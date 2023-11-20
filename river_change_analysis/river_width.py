@@ -5,6 +5,7 @@ import os
 import rasterio
 import numpy as np
 from shapely.geometry import LineString
+from io import StringIO
 
 class river:
     def __init__(self, file_path):

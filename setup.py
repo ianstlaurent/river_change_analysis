@@ -14,7 +14,7 @@ requirements = ['scikit-image',
         'matplotlib',
         'rasterio',
         'numpy',
-        'shapely', 'ee', 'StringIO']
+        'shapely', 'ee']
 
 test_requirements = [ ]
 
