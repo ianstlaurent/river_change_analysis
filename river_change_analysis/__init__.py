@@ -6,7 +6,7 @@ __email__ = 'ianstlaurent7@gmail.com'
 __version__ = '0.1.0'
 
 from .river_analysis import mask_import
-from .river_width import YearlyRiverAnalysis
-from .GEE import authenticate_gee
-from .GEE import define_roi
-from .GEE import process_images
+from .river_width import river
+from .gee import authenticate_gee
+from .gee import define_roi
+from .gee import process_images

@@ -6,7 +6,7 @@ import rasterio
 import numpy as np
 from shapely.geometry import LineString
 
-class YearlyRiverAnalysis:
+class river:
     def __init__(self, file_path):
         self.file_path = file_path
         self.year = None
