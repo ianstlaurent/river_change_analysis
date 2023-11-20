@@ -8,7 +8,7 @@ def authenticate_gee():
         ee.Initialize()
 
 def define_roi(polygon):
-    if polygon != None & polygon != []:
+    if polygon:  # This will be False if polygon is an empty list
         roi = ee.Geometry.Polygon(polygon)
     else:
         roi = ee.Geometry.Polygon([
@@ -18,25 +18,6 @@ def define_roi(polygon):
             [-112.99003537578403,57.52552656456479]
         ])
     return roi
-
-# Classification parameters
-mndwi_param = -0.40
-ndvi_param = 0.20
-cleaning_pixels = 100
-
-# Band names
-bn8 = ['B1', 'B2', 'B3', 'B4', 'B6', 'pixel_qa', 'B5', 'B7']
-bn7 = ['B1', 'B1', 'B2', 'B3', 'B5', 'pixel_qa', 'B4', 'B7']
-bn5 = ['B1', 'B1', 'B2', 'B3', 'B5', 'pixel_qa', 'B4', 'B7']
-bns = ['uBlue', 'Blue', 'Green', 'Red', 'Swir1', 'BQA', 'Nir', 'Swir2']
-
-# Image collections
-ls5 = ee.ImageCollection("LANDSAT/LT05/C01/T1_SR").filterDate('1985-04-01', '1999-04-15').select(bn5, bns)
-ls7 = ee.ImageCollection("LANDSAT/LE07/C01/T1_SR").select(bn7, bns)
-ls8 = ee.ImageCollection("LANDSAT/LC08/C01/T1_SR").select(bn8, bns)
-merged = ls5.merge(ls7).merge(ls8)
-
-
 # Define functions for classification
 def Ndvi(image):
     ndvi = image.normalizedDifference(['Nir', 'Red']).rename('ndvi')
@@ -58,7 +39,23 @@ def Evi(image):
         })
     return evi.rename(['evi'])
 
-def process_images(start_year, end_year):
+def process_images(start_year, end_year, roi, folder_name, file_name):
+    mndwi_param = -0.40
+    ndvi_param = 0.20
+    cleaning_pixels = 100
+
+    # Band namesg
+    bn8 = ['B1', 'B2', 'B3', 'B4', 'B6', 'pixel_qa', 'B5', 'B7']
+    bn7 = ['B1', 'B1', 'B2', 'B3', 'B5', 'pixel_qa', 'B4', 'B7']
+    bn5 = ['B1', 'B1', 'B2', 'B3', 'B5', 'pixel_qa', 'B4', 'B7']
+    bns = ['uBlue', 'Blue', 'Green', 'Red', 'Swir1', 'BQA', 'Nir', 'Swir2']
+
+    # Image collections
+    ls5 = ee.ImageCollection("LANDSAT/LT05/C01/T1_SR").filterDate('1985-04-01', '1999-04-15').select(bn5, bns)
+    ls7 = ee.ImageCollection("LANDSAT/LE07/C01/T1_SR").select(bn7, bns)
+    ls8 = ee.ImageCollection("LANDSAT/LC08/C01/T1_SR").select(bn8, bns)
+    merged = ls5.merge(ls7).merge(ls8)
+
     for year in range(start_year, end_year+1):
         sDate_T1 = str(year) + '-06-01'
         eDate_T1 = str(year) + '-10-10'
@@ -106,11 +103,11 @@ def process_images(start_year, end_year):
         task = ee.batch.Export.image.toDrive(
             image = Active_channel_binary_mask,
             description = filename,
-            fileNamePrefix = 'Active_channel_binary_mask_python_' + str(year),
+            fileNamePrefix = file_name + str(year),
             region = roi.getInfo()['coordinates'],
             scale = 30,
             fileFormat = 'GeoTIFF',
-            folder = 'CSC_497',
+            folder = folder_name,
             maxPixels = 1e12
         )
         task.start()
