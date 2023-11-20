@@ -16,7 +16,7 @@ rivers_files = river_change_analysis.mask_import('/Users/ian/Desktop/School/Fall
 # Process each year and store in a list
 annual_data = []
 for file in rivers_files:
-    yearly_analysis = river_change_analysis.river_width.YearlyRiverAnalysis(file)
+    yearly_analysis = river_change_analysis.river_width.river(file)
     yearly_analysis.process()
     annual_data.append(yearly_analysis)
 
