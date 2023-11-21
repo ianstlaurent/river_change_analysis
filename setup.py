@@ -14,7 +14,7 @@ requirements = ['scikit-image',
         'matplotlib',
         'rasterio',
         'numpy',
-        'shapely', 'ee']
+        'shapely', 'earthengine-api==0.1.379']
 
 test_requirements = [ ]
 

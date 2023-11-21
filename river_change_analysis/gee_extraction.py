@@ -1,5 +1,4 @@
 import ee
-
 def authenticate_gee():
     ee.Authenticate()
     ee.Initialize()
