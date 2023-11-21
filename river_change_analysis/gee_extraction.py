@@ -1,15 +1,8 @@
 import ee
-try:
-    from StringIO import StringIO ## for Python 2
-except ImportError:
-    from io import StringIO ## for Python 3
 
-def authenticate_gee():
-    try:
-        ee.Initialize()
-    except Exception as e:
-        ee.Authenticate()
-        ee.Initialize()
+def authenticate():
+    ee.Authenticate()
+    ee.Initialize()
 
 def define_roi(polygon):
     if polygon:  # This will be False if polygon is an empty list
