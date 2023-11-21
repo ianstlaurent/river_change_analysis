@@ -1,6 +1,6 @@
 import ee
 
-def authenticate():
+def authenticate_gee():
     ee.Authenticate()
     ee.Initialize()
 
