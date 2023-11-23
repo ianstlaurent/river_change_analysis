@@ -95,7 +95,7 @@ def process_images(start_year, end_year, roi, folder_name, file_name):
         Alluvial_deposits = activebeltMasked_p50
         Active_channel_binary_mask = noise_removal_p50_Masked
 
-        filename = "River_Binary_Mask_" + str(year)
+        filename = file_name + str(year)
         task = ee.batch.Export.image.toDrive(
             image = Active_channel_binary_mask,
             description = filename,
