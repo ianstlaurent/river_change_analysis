@@ -8,9 +8,8 @@ from shapely.geometry import LineString
 
 
 class river:
-    def __init__(self, mask_file_path, dem_file_path):
+    def __init__(self, mask_file_path):
         self.file_path = mask_file_path
-        self.dem_file_path = dem_file_path
         self.year = None
         self.mask = None
         self.centerline = None
@@ -30,10 +29,6 @@ class river:
         self.accretion_correlated_with_elevation = None
 
     def process(self):
-        # Load DEM data
-        with rasterio.open(self.dem_file_path) as dataset:
-            self.dem = dataset.read(1)
-
         # Load river mask
         with rasterio.open(self.file_path) as dataset:
             self.mask = dataset.read(1)  # Read the first band into a 2D array
@@ -68,7 +63,6 @@ class river:
 
             self.Wavg = np.mean(self.widths)
 
-        self.river_elevation = self.dem * self.mask
     def plot(self):
         # Plot the mask
         fig, ax = plt.subplots(figsize=(12, 8))
@@ -85,8 +79,6 @@ class river:
         plt.savefig(output_file_path, format='jpeg', dpi=300)
 
         plt.show()
-
-
 
     def plot_migration(self, other):
       migration = self.mask.astype(int) - other.mask.astype(int)
@@ -120,3 +112,4 @@ class river:
       elevation_change = self.river_elevation - other.river_elevation
       self.erosion_correlated_with_elevation = np.sum((elevation_change < 0) & (self.mask > 0))
       self.accretion_correlated_with_elevation = np.sum((elevation_change > 0) & (self.mask > 0))
+

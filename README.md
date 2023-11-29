@@ -103,7 +103,7 @@ The processing of the images may require some time to finish depending on the nu
 rivers_files = rca.mask_import(folder_path, file_pattern)
 ```
 
-### Import Landsat Imagery
+###
 
 
 
