@@ -4,7 +4,7 @@ import ee
 srtm = ee.Image('USGS/SRTMGL1_003')
 
 class dem:
-    def __init__(roi):
+    def __init__(self, roi):
         self.roi = roi
         self.dem = None
         self.elevation = None
