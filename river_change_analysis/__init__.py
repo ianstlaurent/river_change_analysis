@@ -9,6 +9,7 @@ from .river_analysis import mask_import
 from .river_width import river
 from .gee_extraction import define_roi
 from .gee_extraction import process_images
+from .gee_extraction import import_dem
 from .google_drive_extraction import download_files_from_drive
 from .dem_extraction import dem
 
