@@ -53,7 +53,6 @@ def import_dem(roi, file_name_prefix, folder_name):
     dem = ee.Image('USGS/SRTMGL1_003').clip(roi)
     elevation = dem.select('elevation')
     slope = ee.Terrain.slope(elevation)
-
     task = ee.batch.Export.image.toDrive(
             image = dem,
             description = file_name_prefix + '_dem',
@@ -69,7 +68,7 @@ def import_dem(roi, file_name_prefix, folder_name):
     task1 = ee.batch.Export.image.toDrive(
             image = elevation,
             description = file_name_prefix + '_elevation',
-            fileNamePrefix = file_name_prefix + 'elevation',
+            fileNamePrefix = file_name_prefix + '_elevation',
             region = roi.getInfo()['coordinates'],
             scale = 30,
             fileFormat = 'GeoTIFF',
@@ -81,7 +80,7 @@ def import_dem(roi, file_name_prefix, folder_name):
     task2 = ee.batch.Export.image.toDrive(
             image = slope,
             description = file_name_prefix + '_slope',
-            fileNamePrefix = file_name_prefix + 'slope',
+            fileNamePrefix = file_name_prefix + '_slope',
             region = roi.getInfo()['coordinates'],
             scale = 30,
             fileFormat = 'GeoTIFF',
