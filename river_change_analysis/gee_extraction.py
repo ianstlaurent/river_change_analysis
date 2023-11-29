@@ -1,12 +1,23 @@
+# GEE River Binary Mask Extraction
+# Modified from Example Work Flow in:
+# Boothroyd, RJ, Williams, RD, Hoey, TB, Barrett, B, Prasojo, OA. Applications of Google Earth Engine
+# in fluvial geomorphology for detecting river channel change. WIREs Water.
+# 2021; 8:e21496. https://doi.org/10.1002/wat2.1496
+
 import ee
-def authenticate_gee():
-    ee.Authenticate()
-    ee.Initialize()
+
+CLOUD_SHADOW_BIT_MASK = 1 << 3
+CLOUDS_BIT_MASK = 1 << 5
+
+
+ee.Authenticate()
+ee.Initialize()
 
 def define_roi(polygon):
     if polygon:  # This will be False if polygon is an empty list
         roi = ee.Geometry.Polygon(polygon)
     else:
+        print("No region of interest provided. Using default ROI.")
         roi = ee.Geometry.Polygon([
             [-109.92484982890903,57.52552656456479],
             [-109.92484982890903,59.16266725855286],
@@ -14,50 +25,67 @@ def define_roi(polygon):
             [-112.99003537578403,57.52552656456479]
         ])
     return roi
+
 # Define functions for classification
 def Ndvi(image):
-    ndvi = image.normalizedDifference(['Nir', 'Red']).rename('ndvi')
-    return ndvi
+    """Calculate the Normalized Difference Vegetation Index (NDVI) for an image."""
+    return image.normalizedDifference(['Nir', 'Red']).rename('ndvi')
 
 def Lswi(image):
-    lswi = image.normalizedDifference(['Nir', 'Swir1']).rename('lswi')
-    return lswi
+    """Calculate the Land Surface Water Index (LSWI) for an image."""
+    return image.normalizedDifference(['Nir', 'Swir1']).rename('lswi')
 
 def Mndwi(image):
-    mndwi = image.normalizedDifference(['Green', 'Swir1']).rename('mndwi')
-    return mndwi
+    """Calculate the Modified Normalized Difference Water Index (MNDWI) for an image."""
+    return image.normalizedDifference(['Green', 'Swir1']).rename('mndwi')
 
 def Evi(image):
+    """Calculate the Enhanced Vegetation Index (EVI) for an image."""
     evi = image.expression('2.5 * (Nir - Red) / (1 + Nir + 6 * Red - 7.5 * Blue)', {
         'Nir': image.select(['Nir']),
         'Red': image.select(['Red']),
         'Blue': image.select(['Blue'])
-        })
+    })
     return evi.rename(['evi'])
 
-def process_images(start_year, end_year, roi, folder_name, file_name):
+
+def process_images(start_year, end_year, month_day_start, month_day_end, roi, folder_name, file_name):
+
+    if (start_year == None) | (end_year == None):
+        raise ValueError("Please provide a start year and end year.")
+    if (month_day_start == None) | (month_day_end == None):
+        raise ValueError("Please provide a start date and end date.")
+    if roi == None:
+        raise ValueError("Please provide a region of interest.")
+    if folder_name == None:
+        raise ValueError("Please provide a folder name.")
+    if file_name == None:
+        raise ValueError("Please provide a file name.")
+
+    # Parameters for water and active river belt classification
     mndwi_param = -0.40
     ndvi_param = 0.20
     cleaning_pixels = 100
 
-    # Band namesg
+    # Band names for different Landsat sensors
     bn8 = ['B1', 'B2', 'B3', 'B4', 'B6', 'pixel_qa', 'B5', 'B7']
     bn7 = ['B1', 'B1', 'B2', 'B3', 'B5', 'pixel_qa', 'B4', 'B7']
     bn5 = ['B1', 'B1', 'B2', 'B3', 'B5', 'pixel_qa', 'B4', 'B7']
     bns = ['uBlue', 'Blue', 'Green', 'Red', 'Swir1', 'BQA', 'Nir', 'Swir2']
 
-    # Image collections
+    # Image collections for different Landsat sensors
     ls5 = ee.ImageCollection("LANDSAT/LT05/C01/T1_SR").filterDate('1985-04-01', '1999-04-15').select(bn5, bns)
     ls7 = ee.ImageCollection("LANDSAT/LE07/C01/T1_SR").select(bn7, bns)
     ls8 = ee.ImageCollection("LANDSAT/LC08/C01/T1_SR").select(bn8, bns)
-    merged = ls5.merge(ls7).merge(ls8)
+    merged = ls5.merge(ls7).merge(ls8)  # Merge all collections into one
 
     for year in range(start_year, end_year+1):
-        sDate_T1 = str(year) + '-06-01'
-        eDate_T1 = str(year) + '-10-10'
+        sDate_T1 = str(year) + month_day_start  # Start date for filtering
+        eDate_T1 = str(year) + month_day_end  # End date for filtering
 
         # Filter date range, roi and apply simple cloud processing:
         def mask_clouds(image):
+            """Mask clouds and cloud shadows in an image."""
             cloudShadowBitMask = 1 << 3
             cloudsBitMask = 1 << 5
             qa = image.select('BQA')

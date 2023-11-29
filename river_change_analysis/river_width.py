@@ -6,9 +6,11 @@ import rasterio
 import numpy as np
 from shapely.geometry import LineString
 
+
 class river:
-    def __init__(self, file_path):
-        self.file_path = file_path
+    def __init__(self, mask_file_path, dem_file_path):
+        self.file_path = mask_file_path
+        self.dem_file_path = dem_file_path
         self.year = None
         self.mask = None
         self.centerline = None
@@ -23,8 +25,16 @@ class river:
         self.y_coords = None
         self.erosion = None
         self.accretion = None
+        self.river_elevation = None
+        self.erosion_correlated_with_elevation = None
+        self.accretion_correlated_with_elevation = None
 
     def process(self):
+        # Load DEM data
+        with rasterio.open(self.dem_file_path) as dataset:
+            self.dem = dataset.read(1)
+
+        # Load river mask
         with rasterio.open(self.file_path) as dataset:
             self.mask = dataset.read(1)  # Read the first band into a 2D array
             self.year = self.file_path[-8:-4]
@@ -58,6 +68,7 @@ class river:
 
             self.Wavg = np.mean(self.widths)
 
+        self.river_elevation = self.dem * self.mask
     def plot(self):
         # Plot the mask
         fig, ax = plt.subplots(figsize=(12, 8))
@@ -106,3 +117,6 @@ class river:
       self.erosion = np.sum(((erosion) * (pixel_area**2))) / 1000000
       self.accretion = np.sum(((accretion) * (pixel_area**2))) / 1000000
       no_change_area = ((no_change) * pixel_area)
+      elevation_change = self.river_elevation - other.river_elevation
+      self.erosion_correlated_with_elevation = np.sum((elevation_change < 0) & (self.mask > 0))
+      self.accretion_correlated_with_elevation = np.sum((elevation_change > 0) & (self.mask > 0))
