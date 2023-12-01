@@ -1,3 +1,8 @@
+import ee
+from rasterio.plot import show
+import matplotlib.pyplot as plt
+import rasterio
+import numpy as np
 
 def quantify_migration(annual_data, dem):
     erosion_data = []
