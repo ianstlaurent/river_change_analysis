@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import rasterio
 import numpy as np
 
-def quantify_migration(annual_data, dem):
+def quantify_migration_plot(annual_data, dem):
     erosion_data = []
     accretion_data = []
     erosion_volume_data = []
