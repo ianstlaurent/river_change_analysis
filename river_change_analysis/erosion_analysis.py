@@ -1,4 +1,5 @@
-def quantify_and_plot_migration(annual_data, dem):
+
+def quantify_migration(annual_data, dem):
     erosion_data = []
     accretion_data = []
     erosion_volume_data = []
