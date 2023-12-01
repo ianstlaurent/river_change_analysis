@@ -13,9 +13,8 @@ def quantify_migration_plot(annual_data, dem):
     years = [int(river.year) for river in annual_data]
     pixelsize = 30
     # Calculate erosion for each year compared to the last
-    for i in range(2, len(annual_data)):
-
-        annual_data[i].quantify_migration(annual_data[i], annual_data[i-1],dem, pixelsize)
+    for i in range(1, len(annual_data)):
+        annual_data[i].quantify_migration(annual_data[i-1],dem, pixelsize)
         erosion_data.append(annual_data[i].erosion)
         accretion_data.append(annual_data[i].accretion)
         erosion_volume_data.append(annual_data[i].erosion_volume)
