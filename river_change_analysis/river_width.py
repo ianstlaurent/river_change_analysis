@@ -24,9 +24,9 @@ class river:
         self.y_coords = None
         self.erosion = None
         self.accretion = None
-        self.river_elevation = None
-        self.erosion_correlated_with_elevation = None
-        self.accretion_correlated_with_elevation = None
+        self.erosion_volume = None
+        self.accretion_volume = None
+
 
     def process(self):
         # Load river mask
@@ -56,7 +56,6 @@ class river:
             # Convert the coordinate lists to numpy arrays if they aren't already
             # Create a new LineString with the smoothed coordinates
             #self.centerline = LineString(zip(x_coords_smooth, y_coords_smooth))
-
             # Compute angles and curvatures here
 
             self.Wra = self.mask.sum() / centerline_geom.length
@@ -66,23 +65,14 @@ class river:
     def plot(self):
         # Plot the mask
         fig, ax = plt.subplots(figsize=(12, 8))
-
         # Plot the mask with a colormap that represents water
         ax.imshow(self.mask, cmap='Blues', interpolation='none', alpha=0.7)
         ax.imshow(self.edges, cmap='Greens', interpolation='none', alpha=0.5)
-        #ax.scatter(self.x_coords, self.y_coords, color='red', s=1)
         plt.title('Athabasca River Mask ' + str(self.year))
-
-
-        output_dir = '/content/drive/MyDrive/CSC_497/Plots/'
-        output_file_path = os.path.join(output_dir, f'Athabasca_River_Mask_Reach_2_{self.year}.jpeg')
-        plt.savefig(output_file_path, format='jpeg', dpi=300)
-
         plt.show()
 
     def plot_migration(self, other):
       migration = self.mask.astype(int) - other.mask.astype(int)
-
       # Plot the migration
       # Positive values (areas that are only in the current year's mask) in red
       # Negative values (areas that are only in the other year's mask) in blue
@@ -96,20 +86,16 @@ class river:
       colorbar.set_label('Erosion (Red) and Accretion (Blue)', rotation=270, labelpad=15)
 
       # Set the title to be in the center
-      ax.set_title('River Migration: 1986 Compared to 2021', pad=20, ha='center')
-
+      ax.set_title(f'River Migration: {self.year} Compared to {other.year}', pad=20, ha='center')
       plt.show()
+    def quantify_migration(self, other, dem, pixel_area):
+        erosion = (self.mask.astype(int) - other.mask.astype(int)) > 0
+        accretion = (other.mask.astype(int) - self.mask.astype(int)) > 0
 
+        # Calculate the area of erosion and accretion
+        self.erosion = np.sum(erosion * (pixel_area**2)) / 1000000
+        self.accretion = np.sum(accretion * (pixel_area**2)) / 1000000
 
-    def quantify_migration(self, other, pixel_area):
-      erosion = (self.mask.astype(int) - other.mask.astype(int)) > 0
-      accretion = (other.mask.astype(int) - self.mask.astype(int)) > 0
-      no_change = (self.mask.astype(int) == other.mask.astype(int)) & (self.mask.astype(int) == 1)
-
-      self.erosion = np.sum(((erosion) * (pixel_area**2))) / 1000000
-      self.accretion = np.sum(((accretion) * (pixel_area**2))) / 1000000
-      no_change_area = ((no_change) * pixel_area)
-      elevation_change = self.river_elevation - other.river_elevation
-      self.erosion_correlated_with_elevation = np.sum((elevation_change < 0) & (self.mask > 0))
-      self.accretion_correlated_with_elevation = np.sum((elevation_change > 0) & (self.mask > 0))
-
+        # Calculate the volume of erosion and accretion
+        self.erosion_volume = np.sum(erosion * dem * (pixel_area**2)) / 1000000
+        self.accretion_volume = np.sum(accretion * dem * (pixel_area**2)) / 1000000
