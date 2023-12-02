@@ -13,7 +13,7 @@ from skimage.filters import threshold_otsu
 from scipy.ndimage import binary_erosion
 from typing import List, Tuple
 
-class River:
+class river:
     def __init__(self, mask_file_path: str):
         """
         Initialize a River object.
@@ -92,7 +92,6 @@ class River:
         """
         y, x = np.where(edges)
         ax.scatter(x, y, color=color, alpha=alpha, s=6, label=label, edgecolors='none')
-
 
     @staticmethod
     def plot_river_migration(data):
