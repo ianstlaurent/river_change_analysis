@@ -163,21 +163,7 @@ def process_images(start_year, end_year, month_day_start, month_day_end, roi, fo
         smooth_map_p50 = active_p50.focal_mode(radius=10, kernelType='octagon', units='pixels', iterations=1).mask(active_p50.gte(1))
         noise_removal_p50 = active_p50.updateMask(active_p50.connectedPixelCount(cleaning_pixels, False).gte(cleaning_pixels)).unmask(smooth_map_p50)
         noise_removal_p50_Masked = noise_removal_p50.updateMask(noise_removal_p50.gt(0))
-
-        # Image closure operation to fill small holes.
-        watermask = noise_removal_p50_Masked.focal_max().focal_min()
-        #REMOVE NOISE AND SMALL ISLANDS TO SIMPLIFY THE TOPOLOGY.
-        MIN_SIZE = 2E3
-        barPolys = watermask.Not().selfMask() \
-            .reduceToVectors(
-                geometry=roi,
-                scale=30,
-                eightConnected=True,
-                maxPixels=1e12
-            ) \
-            .filter(ee.Filter.lte('count', MIN_SIZE))
-        filled = watermask.paint(barPolys, 1)
-        Wetted_channel = watermask.updateMask(filled.Not())
+        Wetted_channel = waterMasked_p50
         river_mask = noise_removal_p50_Masked
 
         filename = file_name + 'wetted_channel' + str(year)
@@ -194,17 +180,17 @@ def process_images(start_year, end_year, month_day_start, month_day_end, roi, fo
         task.start()
 
         filename = file_name + 'river_mask' + str(year)
-        task1 = ee.batch.Export.image.toDrive(
+        task = ee.batch.Export.image.toDrive(
             image = river_mask,
             description = filename,
-            fileNamePrefix = file_name + str(year),
+            fileNamePrefix = file_name + 'river_mask' + str(year),
             region = roi.getInfo()['coordinates'],
             scale = 30,
             fileFormat = 'GeoTIFF',
             folder = folder_name,
             maxPixels = 1e12
         )
-        task1.start()
+        task.start()
 
 
 

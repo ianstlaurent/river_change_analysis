@@ -20,10 +20,9 @@ year_end = 2015
 
 region = rca.define_roi([])
 
-rca.process_images(year_start, year_end, date_start, date_end,region, folder_path, file_pattern)
+#rca.process_images(year_start, year_end, date_start, date_end,region, folder_path, file_pattern)
 
 
-'''
 # Now you can use mask_import and YearlyRiverAnalysis through the rc alias
 rivers_files = rca.mask_import('/Users/ian/Desktop/School/Fall 2023/CSC 497/Python_Library/rca/binary_river_masks/', 'Active_channel_binary_mask_python_')
 
@@ -40,4 +39,4 @@ yearly_analysis.quantify_migration(annual_data[0], 30)
 print(yearly_analysis.erosion)
 print(yearly_analysis.accretion)
 
-'''
+
