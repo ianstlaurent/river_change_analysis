@@ -11,11 +11,16 @@ from scipy.ndimage import distance_transform_edt, gaussian_gradient_magnitude
 from skimage.morphology import skeletonize, thin
 from skimage.filters import threshold_otsu
 from scipy.ndimage import binary_erosion
+from typing import List, Tuple
 
+class River:
+    def __init__(self, mask_file_path: str):
+        """
+        Initialize a River object.
 
-
-class river:
-    def __init__(self, mask_file_path):
+        Args:
+            mask_file_path (str): Path to the mask file.
+        """
         self.file_path = mask_file_path
         self.year = None
         self.mask = None
@@ -34,8 +39,10 @@ class river:
         self.erosion_volume = None
         self.accretion_volume = None
 
-
-    def process(self):
+    def process(self) -> None:
+        """
+        Process the river mask to extract the centerline.
+        """
         # Load river mask
         with rasterio.open(self.file_path) as dataset:
             self.mask = dataset.read(1)  # Read the first band into a 2D array
@@ -56,48 +63,45 @@ class river:
             # Prune the centerline to remove spurious branches
             self.centerline = thin(centerline_raw, max_iter=500)  # Adjust max_iter as needed
 
+    def extract_river_edges(self, binary_mask: np.ndarray) -> np.ndarray:
+        """
+        Extract the edges of the river from a binary mask.
 
-        def calculate_widths(self):
-            # Initialize an empty list to store the widths
-            widths = []
+        Args:
+            binary_mask (np.ndarray): Binary mask of the river.
 
-            # Iterate over each pixel in the centerline
-            for (i, j) in np.argwhere(self.centerline):
-                # Calculate the direction of the cross-section
-                angle = self.directions[i, j]
-
-                # Calculate the endpoints of the line segment
-                length = 100  # Adjust as needed
-                x0 = j - length * np.cos(angle)
-                y0 = i + length * np.sin(angle)
-                x1 = j + length * np.cos(angle)
-                y1 = i - length * np.sin(angle)
-
-                # Extract the line profile
-                line = profile_line(self.mask, (y0, x0), (y1, x1))
-
-                # Calculate the width as the number of foreground pixels in the line profile
-                width = np.count_nonzero(line)
-                widths.append(width)
-
-            # Convert the list of widths to a NumPy array
-            self.widths = np.array(widths)
-
-
-
-    def extract_river_edges(binary_mask):
-        # Erode the binary mask to get the edges
+        Returns:
+            np.ndarray: Binary mask of the river edges.
+        """
         eroded_mask = binary_erosion(binary_mask)
         edges = binary_mask & ~eroded_mask
         return edges
 
 
+    @staticmethod
     def plot_river_edges(ax, edges, color, alpha, label):
+        """
+        Plot the edges of the river on a given axes.
+
+        Args:
+            ax (matplotlib.axes.Axes): The axes on which to plot the edges.
+            edges (np.ndarray): Binary mask of the river edges.
+            color (str): The color to use for the edges.
+            alpha (float): The transparency level of the edges.
+            label (str): The label for the edges in the legend.
+        """
         y, x = np.where(edges)
         ax.scatter(x, y, color=color, alpha=alpha, s=6, label=label, edgecolors='none')
 
 
+    @staticmethod
     def plot_river_migration(data):
+        """
+        Plot the migration of the river over time.
+
+        Args:
+            data (list): A list of River objects representing the river at different points in time.
+        """
         years = len(data)
 
         threshold = 150
@@ -111,13 +115,13 @@ class river:
         # Plot each year's river edges
         for i, year in enumerate(years_to_plot):
             river_mask = data[year]
-            edges = River.extract_river_edges(river_mask.mask)
+            edges = river_mask.extract_river_edges()
             color = colors[i]
             alpha = 0.6
 
             actual_year = river_mask.year
 
-            River.plot_river_edges(ax, edges, color, alpha, label=str(actual_year))
+            river_mask.plot_river_edges(ax, edges, color, alpha, label=str(actual_year))
 
         ax.set_ylim(ax.get_ylim()[::-1])
         ax.set_title('River Edge Evolution Over 30 Years')
@@ -129,9 +133,10 @@ class river:
         #plt.savefig('river_edge_evolution_cleaned.png', dpi=300)
         plt.show()
 
-
-
     def plot(self):
+        """
+        Plot the river mask and edges.
+        """
         # Plot the mask
         fig, ax = plt.subplots(figsize=(12, 8))
         # Plot the mask with a colormap that represents water
@@ -140,24 +145,41 @@ class river:
         plt.title('Athabasca River Mask ' + str(self.year))
         plt.show()
 
-    def plot_migration(self, other):
-      migration = self.mask.astype(int) - other.mask.astype(int)
-      # Plot the migration
-      # Positive values (areas that are only in the current year's mask) in red
-      # Negative values (areas that are only in the other year's mask) in blue
-      fig, ax = plt.subplots(figsize=(20, 10))
-      cmap = plt.get_cmap('bwr')
-      im = ax.imshow(migration, cmap=cmap, vmin=-1, vmax=1)
+    def plot_river_migration_2(self, other: 'River') -> None:
+        """
+        Plot the migration of the river.
 
-      # Create an axes for colorbar.
-      cax = fig.add_axes([ax.get_position().x1 + 0.01, ax.get_position().y0, 0.02, ax.get_position().height])
-      colorbar = plt.colorbar(im, cax=cax)  # Place the colorbar in the axes created
-      colorbar.set_label('Erosion (Red) and Accretion (Blue)', rotation=270, labelpad=15)
+        Args:
+            other (River): Another River object to compare with.
+        """
+        migration = self.mask.astype(int) - other.mask.astype(int)
+        # Plot the migration
+        # Positive values (areas that are only in the current year's mask) in red
+        # Negative values (areas that are only in the other year's mask) in blue
+        fig, ax = plt.subplots(figsize=(20, 10))
+        cmap = plt.get_cmap('bwr')
+        im = ax.imshow(migration, cmap=cmap, vmin=-1, vmax=1)
 
-      # Set the title to be in the center
-      ax.set_title(f'River Migration: {self.year} Compared to {other.year}', pad=20, ha='center')
-      plt.show()
-    def quantify_migration(self, other, dem, pixel_area):
+        # Create an axes for colorbar.
+        cax = fig.add_axes([ax.get_position().x1 + 0.01, ax.get_position().y0, 0.02, ax.get_position().height])
+        colorbar = plt.colorbar(im, cax=cax)  # Place the colorbar in the axes created
+        colorbar.set_label('Erosion (Red) and Accretion (Blue)', rotation=270, labelpad=15)
+
+        # Set the title to be in the center
+        ax.set_title(f'River Migration: {self.year} Compared to {other.year}', pad=20, ha='center')
+        plt.show()
+
+
+
+    def quantify_migration(self, other: 'River', dem: np.ndarray, pixel_area: float) -> None:
+        """
+        Quantify the migration of the river.
+
+        Args:
+            other (River): Another River object to compare with.
+            dem (np.ndarray): Digital Elevation Model.
+            pixel_area (float): Area of a pixel.
+        """
         erosion = (self.mask.astype(int) - other.mask.astype(int)) > 0
         accretion = (other.mask.astype(int) - self.mask.astype(int)) > 0
 
