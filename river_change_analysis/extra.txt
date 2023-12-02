@@ -1,0 +1,60 @@
+        # Convert the Wetted_channel to a numpy array
+        Wetted_channel_array = np.array(Wetted_channel.getInfo())
+
+        # Perform morphological thinning to get the centerline
+        centerline = thin(Wetted_channel_array)
+
+        # Calculate the gradient of the distance raster
+        gradient = filters.sobel(centerline)
+
+        # Threshold the gradient raster
+        threshold = 0.9
+        centerline_raw = gradient < threshold
+
+        # Derive a 1-pixel width centerline using skeletonization
+        centerline_1px = morphology.skeletonize(centerline_raw)
+
+        # Define the maximum distance for branch removal
+        MAXDISTANCE_BRANCH_REMOVAL = 500
+
+        # Prune the centerline to remove spurious branches
+        centerline_pruned = morphology.thin(centerline_1px, max_iter=MAXDISTANCE_BRANCH_REMOVAL, method='branch')
+
+        # Calculate the orthogonal direction
+        orthogonal_direction = np.arctan2(gradient) + np.pi / 2
+
+        # Quantify river width on the channel mask along the orthogonal directions
+        river_width = np.sum(Wetted_channel_array, axis=orthogonal_direction)
+
+        # Identify the banks by dilating the channel mask and comparing it to the original channel mask
+        bank_mask = Wetted_channel_array.focal_max(1).neq(Wetted_channel_array)
+
+        # Calculate the aspect of the bank faces
+        bank_distance = Wetted_channel_array.Not().cumulativeCost(
+            source=Wetted_channel_array,
+            maxDistance=1E2,
+            geodeticDistance=False
+        )
+
+        bank_aspect = ee.Terrain.aspect(bank_distance) \
+            .multiply(np.pi).divide(180) \
+            .mask(bank_mask).rename('bankAspect')
+
+        # Calculate the length represented by each bank pixel
+        distance_kernel = Kernel.euclidean(
+            radius=30,
+            units='meters',
+            magnitude=0.5
+        )
+        bank_length = bank_mask.convolve(distance_kernel) \
+            .mask(bank_mask).rename('bankLength')
+
+        # Add the river width, bank aspect, and bank length as bands to the river mask image
+        river_mask = river_mask.addBands(centerline_pruned.rename('centerline'))
+        river_mask = river_mask.addBands(river_width.rename('riverWidth'))
+        river_mask = river_mask.addBands(bank_aspect.rename('bankAspect'))
+        river_mask = river_mask.addBands(bank_length.rename('bankLength'))
+
+
+
+
