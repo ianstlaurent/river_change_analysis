@@ -1,4 +1,22 @@
-        # Convert the Wetted_channel to a numpy array
+                # Image closure operation to fill small holes.
+        watermask = noise_removal_p50_Masked.focal_max().focal_min()
+        #REMOVE NOISE AND SMALL ISLANDS TO SIMPLIFY THE TOPOLOGY.
+        MIN_SIZE = 2E3
+        barPolys = watermask.Not().selfMask() \
+            .reduceToVectors(
+                geometry=roi,
+                scale=30,
+                eightConnected=True,
+                maxPixels=1e9
+            ) \
+            .filter(ee.Filter.lte('count', MIN_SIZE))
+        filled = watermask.paint(barPolys, 1)
+        Wetted_channel = watermask.updateMask(filled.Not())
+        river_mask = watermask
+
+
+
+# Convert the Wetted_channel to a numpy array
         Wetted_channel_array = np.array(Wetted_channel.getInfo())
 
         # Perform morphological thinning to get the centerline
@@ -54,6 +72,61 @@
         river_mask = river_mask.addBands(river_width.rename('riverWidth'))
         river_mask = river_mask.addBands(bank_aspect.rename('bankAspect'))
         river_mask = river_mask.addBands(bank_length.rename('bankLength'))
+
+
+        # Perform morphological thinning to get the centerline
+        centerline = thin(wetter_water_mask_array)
+
+        # Calculate the gradient of the centerline
+        gradient_y, gradient_x = np.gradient(centerline)
+
+        # Calculate the orthogonal direction
+        orthogonal_direction = np.arctan2(gradient_y, gradient_x) + np.pi / 2
+
+        # Quantify river width on the channel mask along the orthogonal directions
+        river_width = np.sum(wetter_water_mask_array, axis=orthogonal_direction)
+
+
+        # Calculate the distance transform of the river mask
+        distance = Wetted_channel.fastDistanceTransform().sqrt()
+
+        # Calculate the gradient of the distance raster
+        gradient = distance.gradient()
+
+        # Threshold the gradient raster and derive 1px width centerline
+        centerline_raw = gradient.select('x').pow(2).add(gradient.select('y').pow(2)).sqrt().lt(0.5)
+
+        # Convert the centerline to a binary image
+        centerline_binary = centerline_raw.gt(0).selfMask()
+
+        # Create an empty image
+        empty = ee.Image().byte().clip(roi)
+
+        # Draw the centerline on the empty image
+        centerline = empty.paint(
+            featureCollection=centerline_binary.reduceToVectors(geometry=roi, scale=30, maxPixels=1e9),
+            color=1,
+            width=1
+        )
+
+        # Add the river width, bank aspect, and bank length as bands to the river mask image
+        Wetted_channel = Wetted_channel.addBands(centerline.rename('centerline'))
+        # Create an interactive map
+        Map = geemap.Map()
+
+        # Add the watermask layer
+        Map.addLayer(watermask.updateMask(watermask), {'palette': 'blue'}, 'Watermask')
+
+        # Add the centerline layer
+        Map.addLayer(centerline.updateMask(centerline), {'palette': 'red'}, 'Centerline')
+
+        # Display the map
+        Map
+
+        # Define outputs:
+        #Wetted_channel = waterMasked_p50
+        #Alluvial_deposits = activebeltMasked_p50
+
 
 
 

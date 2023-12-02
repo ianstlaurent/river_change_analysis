@@ -3,14 +3,16 @@
 # Boothroyd, RJ, Williams, RD, Hoey, TB, Barrett, B, Prasojo, OA. Applications of Google Earth Engine
 # in fluvial geomorphology for detecting river channel change. WIREs Water.
 # 2021; 8:e21496. https://doi.org/10.1002/wat2.1496
-# and
 
 import ee
 from skimage.morphology import thin
-from skimage import filters, morphology
 import numpy as np
+import geemap
+
+
 CLOUD_SHADOW_BIT_MASK = 1 << 3
 CLOUDS_BIT_MASK = 1 << 5
+
 
 
 ee.Authenticate()
@@ -171,30 +173,14 @@ def process_images(start_year, end_year, month_day_start, month_day_end, roi, fo
                 geometry=roi,
                 scale=30,
                 eightConnected=True,
-                maxPixels=1e9
+                maxPixels=1e12
             ) \
             .filter(ee.Filter.lte('count', MIN_SIZE))
         filled = watermask.paint(barPolys, 1)
         Wetted_channel = watermask.updateMask(filled.Not())
-        river_mask = watermask
+        river_mask = noise_removal_p50_Masked
 
-        #Alluvial_deposits = activebeltMasked_p50
-
-        filename = file_name + str(year)
-        task = ee.batch.Export.image.toDrive(
-            image = river_mask,
-            description = filename,
-            fileNamePrefix = file_name + str(year),
-            region = roi.getInfo()['coordinates'],
-            scale = 30,
-            fileFormat = 'GeoTIFF',
-            folder = folder_name,
-            maxPixels = 1e12
-        )
-        task.start()
-
-
-        filename = file_name + str(year) + '_wetted_channel_'
+        filename = file_name + 'wetted_channel' + str(year)
         task = ee.batch.Export.image.toDrive(
             image = Wetted_channel,
             description = filename,
@@ -206,6 +192,19 @@ def process_images(start_year, end_year, month_day_start, month_day_end, roi, fo
             maxPixels = 1e12
         )
         task.start()
+
+        filename = file_name + 'river_mask' + str(year)
+        task1 = ee.batch.Export.image.toDrive(
+            image = river_mask,
+            description = filename,
+            fileNamePrefix = file_name + str(year),
+            region = roi.getInfo()['coordinates'],
+            scale = 30,
+            fileFormat = 'GeoTIFF',
+            folder = folder_name,
+            maxPixels = 1e12
+        )
+        task1.start()
 
 
 

@@ -14,8 +14,19 @@ Google Colab Installation:
 !pip install git+https://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@github.com/ianstlaurent/river_change_analysis.git
 ```
 
+Python Installation:
 
-## 4. Example
+# Install the 'river_change_analysis' package directly from the Git repository.
+```python
+pip3 install git+https://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@github.com/ianstlaurent/river_change_analysis.git
+```
+
+# Install Google Authentication Library to connect to GEE API
+```python
+pip3 install google-auth-oauthlib
+```
+
+## 4. Google Colab Example
 
 ### Import relevant Python Libraries
 
@@ -76,13 +87,13 @@ file_name
 
 ```python
 # Define the path to the folder where the binary river masks are stored.
-folder_path = "/content/drive/MyDrive/CSC_497/"
+folder_path = "CSC_497"
 
 # Define the pattern that the filenames of the binary river masks follow.
-file_pattern = "Active_channel_binary_mask_reach_1_"
+file_pattern = "Reach_1_"
 
-date_start = '06-01'
-date_end = '09-31'
+date_start = '-06-01'
+date_end = '-10-01'
 
 year_start = 1986
 year_end = 2021
