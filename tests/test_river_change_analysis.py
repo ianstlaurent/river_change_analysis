@@ -9,7 +9,6 @@ region = river_change_analysis.define_roi([])
 river_change_analysis.process_images(1986, 1989, region, 'CSC_497', 'Active_channel_binary_mask_python_')
 
 
-"""
 # Now you can use mask_import and YearlyRiverAnalysis through the rc alias
 rivers_files = river_change_analysis.mask_import('/Users/ian/Desktop/School/Fall 2023/CSC 497/Python_Library/river_change_analysis/binary_river_masks/', 'Active_channel_binary_mask_python_')
 
@@ -26,4 +25,3 @@ yearly_analysis.quantify_migration(annual_data[0], 30)
 print(yearly_analysis.erosion)
 print(yearly_analysis.accretion)
 
-"""

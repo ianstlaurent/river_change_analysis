@@ -3,9 +3,10 @@
 # Boothroyd, RJ, Williams, RD, Hoey, TB, Barrett, B, Prasojo, OA. Applications of Google Earth Engine
 # in fluvial geomorphology for detecting river channel change. WIREs Water.
 # 2021; 8:e21496. https://doi.org/10.1002/wat2.1496
+# and
 
 import ee
-
+from skimage.morphology import thin
 CLOUD_SHADOW_BIT_MASK = 1 << 3
 CLOUDS_BIT_MASK = 1 << 5
 
@@ -159,14 +160,39 @@ def process_images(start_year, end_year, month_day_start, month_day_end, roi, fo
         noise_removal_p50 = active_p50.updateMask(active_p50.connectedPixelCount(cleaning_pixels, False).gte(cleaning_pixels)).unmask(smooth_map_p50)
         noise_removal_p50_Masked = noise_removal_p50.updateMask(noise_removal_p50.gt(0))
 
+        # Remove sand bars and other features from the river mask
+        watermask = noise_removal_p50_Masked.focal_max().focal_min()
+        MIN_SIZE = 2E3
+        barPolys = watermask.Not().selfMask() \
+            .reduceToVectors(
+                geometry=roi,
+                scale=30,
+                eightConnected=True,
+                maxPixels=1e9
+            ) \
+            .filter(ee.Filter.lte('count', MIN_SIZE))  # Get small polys.
+        filled = watermask.paint(barPolys, 1)
+
+        # Next identify the river from the surrounding water bodies
+
+        costmap = filled.Not().cumulativeCost(
+        source=watermask.And(ee.Image().byte().paint(sword, 1)),
+        maxDistance=3E3,
+        geodeticDistance=False
+        )
+
+        rivermask = costmap.eq(0).rename('riverMask')
+        active_channel_mask = rivermask.And(watermask)
+
         # Define outputs:
         Wetted_channel = waterMasked_p50
         Alluvial_deposits = activebeltMasked_p50
-        Active_channel_binary_mask = noise_removal_p50_Masked
+
+
 
         filename = file_name + str(year)
         task = ee.batch.Export.image.toDrive(
-            image = Active_channel_binary_mask,
+            image = active_channel_mask,
             description = filename,
             fileNamePrefix = file_name + str(year),
             region = roi.getInfo()['coordinates'],
