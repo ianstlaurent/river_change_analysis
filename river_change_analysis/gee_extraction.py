@@ -9,7 +9,6 @@ import ee
 from skimage.morphology import thin
 from skimage import filters, morphology
 import numpy as np
-from ee import Kernel
 CLOUD_SHADOW_BIT_MASK = 1 << 3
 CLOUDS_BIT_MASK = 1 << 5
 
