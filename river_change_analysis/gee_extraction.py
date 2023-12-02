@@ -166,7 +166,7 @@ def process_images(start_year, end_year, month_day_start, month_day_end, roi, fo
         Wetted_channel = waterMasked_p50
         river_mask = noise_removal_p50_Masked
 
-        filename = file_name + 'wetted_channel' + str(year)
+        filename = file_name + '_wetted_channel_' + str(year)
         task = ee.batch.Export.image.toDrive(
             image = Wetted_channel,
             description = filename,
@@ -178,8 +178,8 @@ def process_images(start_year, end_year, month_day_start, month_day_end, roi, fo
             maxPixels = 1e12
         )
         task.start()
-
-        filename = file_name + 'river_mask' + str(year)
+        '''
+        filename = file_name + '_river_mask_' + str(year)
         task = ee.batch.Export.image.toDrive(
             image = river_mask,
             description = filename,
@@ -191,6 +191,7 @@ def process_images(start_year, end_year, month_day_start, month_day_end, roi, fo
             maxPixels = 1e12
         )
         task.start()
+        '''
 
 
 

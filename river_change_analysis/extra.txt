@@ -126,8 +126,51 @@
         # Define outputs:
         #Wetted_channel = waterMasked_p50
         #Alluvial_deposits = activebeltMasked_p50
+        # Image closure operation to fill small holes.
+        watermask = noise_removal_p50_Masked.focal_max().focal_min()
+        #REMOVE NOISE AND SMALL ISLANDS TO SIMPLIFY THE TOPOLOGY.
+        MIN_SIZE = 2E3
+        barPolys = watermask.Not().selfMask() \
+            .reduceToVectors(
+                geometry=roi,
+                scale=30,
+                eightConnected=True,
+                maxPixels=1e12
+            ) \
+            .filter(ee.Filter.lte('count', MIN_SIZE))
+        filled = watermask.paint(barPolys, 1)
+        Wetted_channel = watermask.updateMask(filled.Not())
+        river_mask = noise_removal_p50_Masked
 
 
 
+            # Skeletonize the mask to get the centerline
+            self.centerline = skeletonize(self.mask)
+
+            # Get the edges of the mask
+            self.edges = sobel(self.mask)
+
+            # Extract the coordinates of the centerline
+            y_coords, x_coords = np.where(self.centerline)
+
+            # Create a LineString from the centerline array
+            centerline_geom = LineString(zip(x_coords, y_coords))
+            self.widths = self.mask.sum(axis=1)
+
+            self.widths = self.widths[self.widths > 50]
+            self.avg_width = np.mean(self.widths)
+            self.buffer_distance = self.avg_width / 2
+            # Buffer the LineString to create a Polygon
+            self.y_coords = y_coords
+            self.x_coords = x_coords
+
+            # Convert the coordinate lists to numpy arrays if they aren't already
+            # Create a new LineString with the smoothed coordinates
+            #self.centerline = LineString(zip(x_coords_smooth, y_coords_smooth))
+            # Compute angles and curvatures here
+
+            self.Wra = self.mask.sum() / centerline_geom.length
+
+            self.Wavg = np.mean(self.widths)
 
 

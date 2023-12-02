@@ -5,6 +5,13 @@ import os
 import rasterio
 import numpy as np
 from shapely.geometry import LineString
+from scipy.ndimage import distance_transform_edt, sobel
+from skimage.morphology import remove_small_objects
+from scipy.ndimage import distance_transform_edt, gaussian_gradient_magnitude
+from skimage.morphology import skeletonize, thin
+from skimage.filters import threshold_otsu
+from scipy.ndimage import binary_erosion
+
 
 
 class river:
@@ -33,34 +40,96 @@ class river:
         with rasterio.open(self.file_path) as dataset:
             self.mask = dataset.read(1)  # Read the first band into a 2D array
             self.year = self.file_path[-8:-4]
-            # Skeletonize the mask to get the centerline
-            self.centerline = skeletonize(self.mask)
+            # Step 1: Distance transform
+            distance = distance_transform_edt(self.mask)
 
-            # Get the edges of the mask
-            self.edges = sobel(self.mask)
+            # Step 2: Gradient
+            gradient = gaussian_gradient_magnitude(distance, sigma=1)
 
-            # Extract the coordinates of the centerline
-            y_coords, x_coords = np.where(self.centerline)
+            # Threshold the gradient
+            thresh = threshold_otsu(gradient)
+            binary = gradient > thresh
 
-            # Create a LineString from the centerline array
-            centerline_geom = LineString(zip(x_coords, y_coords))
-            self.widths = self.mask.sum(axis=1)
+            # Step 3: Skeletonize to get raw centerline
+            centerline_raw = skeletonize(binary)
 
-            self.widths = self.widths[self.widths > 50]
-            self.avg_width = np.mean(self.widths)
-            self.buffer_distance = self.avg_width / 2
-            # Buffer the LineString to create a Polygon
-            self.y_coords = y_coords
-            self.x_coords = x_coords
+            # Prune the centerline to remove spurious branches
+            self.centerline = thin(centerline_raw, max_iter=500)  # Adjust max_iter as needed
 
-            # Convert the coordinate lists to numpy arrays if they aren't already
-            # Create a new LineString with the smoothed coordinates
-            #self.centerline = LineString(zip(x_coords_smooth, y_coords_smooth))
-            # Compute angles and curvatures here
 
-            self.Wra = self.mask.sum() / centerline_geom.length
+        def calculate_widths(self):
+            # Initialize an empty list to store the widths
+            widths = []
 
-            self.Wavg = np.mean(self.widths)
+            # Iterate over each pixel in the centerline
+            for (i, j) in np.argwhere(self.centerline):
+                # Calculate the direction of the cross-section
+                angle = self.directions[i, j]
+
+                # Calculate the endpoints of the line segment
+                length = 100  # Adjust as needed
+                x0 = j - length * np.cos(angle)
+                y0 = i + length * np.sin(angle)
+                x1 = j + length * np.cos(angle)
+                y1 = i - length * np.sin(angle)
+
+                # Extract the line profile
+                line = profile_line(self.mask, (y0, x0), (y1, x1))
+
+                # Calculate the width as the number of foreground pixels in the line profile
+                width = np.count_nonzero(line)
+                widths.append(width)
+
+            # Convert the list of widths to a NumPy array
+            self.widths = np.array(widths)
+
+
+
+    def extract_river_edges(binary_mask):
+        # Erode the binary mask to get the edges
+        eroded_mask = binary_erosion(binary_mask)
+        edges = binary_mask & ~eroded_mask
+        return edges
+
+
+    def plot_river_edges(ax, edges, color, alpha, label):
+        y, x = np.where(edges)
+        ax.scatter(x, y, color=color, alpha=alpha, s=6, label=label, edgecolors='none')
+
+
+    def plot_river_migration(data):
+        years = len(data)
+
+        threshold = 150
+
+        years_to_plot = range(0, years, 5)
+
+        fig, ax = plt.subplots(figsize=(20, 15))
+
+        colors = plt.cm.Spectral(np.linspace(0, 1, len(years_to_plot)))
+
+        # Plot each year's river edges
+        for i, year in enumerate(years_to_plot):
+            river_mask = data[year]
+            edges = River.extract_river_edges(river_mask.mask)
+            color = colors[i]
+            alpha = 0.6
+
+            actual_year = river_mask.year
+
+            River.plot_river_edges(ax, edges, color, alpha, label=str(actual_year))
+
+        ax.set_ylim(ax.get_ylim()[::-1])
+        ax.set_title('River Edge Evolution Over 30 Years')
+        ax.legend(loc='best', fontsize='x-small')
+        ax.set_xlabel('X Coordinate')
+        ax.set_ylabel('Y Coordinate')
+        ax.set_aspect('equal')
+
+        #plt.savefig('river_edge_evolution_cleaned.png', dpi=300)
+        plt.show()
+
+
 
     def plot(self):
         # Plot the mask
