@@ -146,7 +146,7 @@ class River:
         plt.title('Athabasca River Mask ' + str(self.year))
         plt.show()
 
-    def plot_migration(self, other):
+    def plot_1_year_migration(self, other):
       migration = self.mask.astype(int) - other.mask.astype(int)
       # Plot the migration
       # Positive values (areas that are only in the current year's mask) in red
@@ -164,22 +164,46 @@ class River:
       ax.set_title(f'River Migration: {self.year} Compared to {other.year}', pad=20, ha='center')
       plt.show()
 
-    def quantify_migration(self, other, dem, pixel_area):
+    def quantify_erosion(annual_data, dem, pixel_area):
         """
-        Quantify the migration of the river.
+        Quantify the erosion of the river.
 
         Args:
             other (River): Another River object to compare with.
             dem (np.ndarray): Digital Elevation Model.
             pixel_area (float): Area of a pixel.
         """
-        erosion = (self.mask.astype(int) - other.mask.astype(int)) > 0
-        accretion = (other.mask.astype(int) - self.mask.astype(int)) > 0
+        erosion_data = []
+        years = [int(river.year) for river in annual_data]
+        for i in range(1, len(annual_data)):
+            erosion = (annual_data[i].mask.astype(int) - annual_data[i-1].mask.astype(int)) > 0
+            accretion = (annual_data[i].mask.astype(int) - annual_data[i-1].mask.astype(int)) > 0
+            # Calculate the area of erosion and accretion
+            annual_data[i].erosion = np.sum(erosion * (pixel_area**2)) / 1000000
+            annual_data[i].accretion = np.sum(accretion * (pixel_area**2)) / 1000000
 
-        # Calculate the area of erosion and accretion
-        self.erosion = np.sum(erosion * (pixel_area**2)) / 1000000
-        self.accretion = np.sum(accretion * (pixel_area**2)) / 1000000
+            # Calculate the volume of erosion and accretion
+            annual_data[i].erosion_volume = np.sum(erosion * dem * (pixel_area**2)) / 1000000
+            annual_data[i].accretion_volume = np.sum(accretion * dem * (pixel_area**2)) / 1000000
 
-        # Calculate the volume of erosion and accretion
-        self.erosion_volume = np.sum(erosion * dem * (pixel_area**2)) / 1000000
-        self.accretion_volume = np.sum(accretion * dem * (pixel_area**2)) / 1000000
+
+    def plot_erosion(annual_data):
+        """
+        Plot erosion over time
+
+        Args:
+        Annual Data (list): A list of River objects representing the river at different points in time.
+        """
+        erosion_data = []
+        years = [int(river.year) for river in annual_data]
+        for i in range(1, len(annual_data)):
+            erosion_data.append(annual_data[i].erosion)
+
+        # Plot the erosion data over time
+        plt.figure(figsize=(10, 5))
+        plt.plot(years[1:], annual_data, marker='o', linestyle='-', color='red')
+        plt.title('Annual Erosion Over Time')
+        plt.xlabel('Year')
+        plt.ylabel('Erosion (Quantity)')
+        plt.grid(True)
+        plt.show()
