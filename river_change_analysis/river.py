@@ -54,27 +54,42 @@ class River:
             self.mask = dataset.read(1)
             self.year = self.file_path[-8:-4]
 
-    def water_mask_process(self, min_size):
+    def water_mask_process(annual_data, min_size):
         """
         Proceses the water mask to fill in small holes and remove small bars.
         Args:
-            self (River): A River object.
+            self (River) or annual_data list of River Objects.
             min_size (int): Minimum size of a bar to be removed.
         Returns:
             Creates a cleaned water mask and adds it to River object then plots it.
         """
-        # Fill small holes in binary mask
-        kernel = np.ones((5,5),np.uint8)
-        watermask = cv2.morphologyEx(self.mask, cv2.MORPH_CLOSE, kernel)
-        if min_size is None | min_size <= 0:
-                min_size = WATER_MASK_MIN_SIZE
-        # Identify small bars and fill them in to create a filled water mask.
-        labels = measure.label(watermask == 0)
-        for region in measure.regionprops(labels):
-            if region.area < min_size:
-                watermask[labels == region.label] = 1
-        self.watermask = watermask
-        plt.imshow(watermask, cmap='Blues', alpha=0.9)
+        if annual_data is type(list):
+            for i, data in enumerate(annual_data):
+                river = annual_data[i]
+                # Fill small holes in binary mask
+                kernel = np.ones((5,5),np.uint8)
+                watermask = cv2.morphologyEx(river.mask, cv2.MORPH_CLOSE, kernel)
+                if min_size is None | min_size <= 0:
+                        min_size = WATER_MASK_MIN_SIZE
+                # Identify small bars and fill them in to create a filled water mask.
+                labels = measure.label(watermask == 0)
+                for region in measure.regionprops(labels):
+                    if region.area < min_size:
+                        watermask[labels == region.label] = 1
+                river.watermask = watermask
+        else:
+            river = annual_data
+            # Fill small holes in binary mask
+            kernel = np.ones((5,5),np.uint8)
+            watermask = cv2.morphologyEx(river.mask, cv2.MORPH_CLOSE, kernel)
+            if min_size is None | min_size <= 0:
+                    min_size = WATER_MASK_MIN_SIZE
+            # Identify small bars and fill them in to create a filled water mask.
+            labels = measure.label(watermask == 0)
+            for region in measure.regionprops(labels):
+                if region.area < min_size:
+                    watermask[labels == region.label] = 1
+            river.watermask = watermask
 
     def _find_end_points(self):
         '''
@@ -230,6 +245,13 @@ class River:
         ax.imshow(self.mask, cmap='Blues', interpolation='none', alpha=0.7)
         plt.title('Athabasca River Mask' + str(self.year))
         plt.show()
+        if self.watermask is None:
+            self.water_mask_process(WATER_MASK_MIN_SIZE)
+        fig, ax = plt.subplots(figsize=(12, 8))
+        # Plot the mask with a colormap that represents water
+        ax.imshow(self.watermask, cmap='Blues', interpolation='none', alpha=0.7)
+        plt.title('Athabasca Filled River Mask' + str(self.year))
+        plt.show()
 
     def plot_river_migration(self, other):
         """
@@ -292,6 +314,8 @@ class River:
             Erosion and accretion of the river.
         """
         for i in range(1, len(annual_data)):
+            if annual_data[i].watermask is None:
+                annual_data[i].water_mask_process(WATER_MASK_MIN_SIZE)
             erosion = (annual_data[i].watermask.astype(int) - annual_data[i-1].watermask.astype(int)) > 0
             accretion = (annual_data[i].watermask.astype(int) - annual_data[i-1].watermask.astype(int)) > 0
             # Calculate the area of erosion and accretion
