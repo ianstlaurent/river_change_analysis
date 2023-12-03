@@ -213,7 +213,7 @@ class River:
         Returns:
             Plotted edges of the river over time.
         """
-        years_to_plot = range(0, len(annual_data)), 5)
+        years_to_plot = range(0, len(annual_data), 5)
         fig, ax = plt.subplots(figsize=(20, 15))
         colors = plt.cm.Spectral(np.linspace(0, 1, len(years_to_plot)))
 
