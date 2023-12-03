@@ -336,23 +336,27 @@ class River:
         annual_data.sort(key=lambda river: int(river.year))
         erosion_data = []
         accretion_data = []
-        accumulated_erosion = 0
-        accumulated_accretion = 0
+        accumulated_erosion_data = []
+        accumulated_accretion_data = []
+        accumulated_erosion_sum = 0
+        accumulated_accretion_sum = 0
+
         years = [int(river.year) for river in annual_data]
         for i in range(1, len(annual_data)):
             erosion_data.append(annual_data[i].erosion)
-            accumulated_erosion += annual_data[i].erosion
+            accumulated_erosion_sum += annual_data[i].erosion
+            accumulated_erosion_data.append(accumulated_erosion_sum)
             accretion_data.append(annual_data[i].accretion)
-            accumulated_accretion += annual_data[i].accretion
+            accumulated_accretion_sum += annual_data[i].accretion
+            accumulated_accretion_data.append(accumulated_accretion_sum)
 
         # Plot the erosion data over time
-        average_erosion = accumulated_erosion / (len(annual_data) - 1)
-        print(f"Total Accumulated Erosion: {accumulated_erosion} km2/year")
+        average_erosion = accumulated_erosion_sum / (len(annual_data) - 1)
+        print(f"Total Accumulated Erosion: {accumulated_erosion_sum} km2/year")
         print(f"Average Accumulated Erosion: {average_erosion} km2/year")
-        # Plot the erosion data over time
         plt.figure(figsize=(10, 5))
         plt.plot(years[1:], erosion_data, marker='o', linestyle='-', color='red', label='Yearly Erosion (km2)')
-        plt.plot(years[1:], accumulated_erosion, marker='o', linestyle='-', color='blue', label='Accumulated Erosion (km2)')
+        plt.plot(years[1:], accumulated_erosion_data, marker='o', linestyle='-', color='blue', label='Accumulated Erosion (km2)')
         plt.title('Annual and Accumulated Erosion Over Time')
         plt.xlabel('Year')
         plt.ylabel('Erosion (km2)')
@@ -361,12 +365,12 @@ class River:
         plt.show()
 
         # Plot the accretion data over time
-        average_accretion = accumulated_accretion / (len(annual_data) - 1)
-        print(f"Total Accumulated Accretion: {accumulated_accretion} km2/year")
+        average_accretion = accumulated_accretion_sum / (len(annual_data) - 1)
+        print(f"Total Accumulated Accretion: {accumulated_accretion_sum} km2/year")
         print(f"Average Accumulated Accretion: {average_accretion} km2/year")
         plt.figure(figsize=(10, 5))
         plt.plot(years[1:], accretion_data, marker='o', linestyle='-', color='red', label='Yearly Accretion (km2)')
-        plt.plot(years[1:], accumulated_accretion, marker='o', linestyle='-', color='blue', label='Accumulated Accretion (km2)')
+        plt.plot(years[1:], accumulated_accretion_data, marker='o', linestyle='-', color='blue', label='Accumulated Accretion (km2)')
         plt.title('Annual and Accumulated Accretion Over Time')
         plt.xlabel('Year')
         plt.ylabel('Accretion (km2)')
