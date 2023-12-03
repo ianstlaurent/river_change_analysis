@@ -10,11 +10,16 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = ['scikit-image',
-        'matplotlib',
-        'rasterio',
-        'numpy',
-        'shapely', 'earthengine-api==0.1.379']
+requirements = [
+    'scikit-image',
+    'matplotlib',
+    'rasterio',
+    'numpy',
+    'shapely',
+    'earthengine-api==0.1.379',
+    'opencv-python',
+    'scipy',
+]
 
 test_requirements = [ ]
 
