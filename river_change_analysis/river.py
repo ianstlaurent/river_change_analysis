@@ -335,14 +335,20 @@ class River:
         # Sort the annual_data list by year
         annual_data.sort(key=lambda river: int(river.year))
         erosion_data = []
+        accretion_data = []
+        accumulated_erosion = 0
+        accumulated_accretion = 0
         years = [int(river.year) for river in annual_data]
         for i in range(1, len(annual_data)):
             erosion_data.append(annual_data[i].erosion)
-        # Calculate the accumulated erosion
-        accumulated_erosion = np.cumsum(erosion_data)
-        # Calculate the average erosion rate
-        average_erosion_rate = accumulated_erosion / (len(years) - 1)
-        print(f"Average erosion rate: {average_erosion_rate} km2/year")
+            accumulated_erosion += annual_data[i].erosion
+            accretion_data.append(annual_data[i].accretion)
+            accumulated_accretion += annual_data[i].accretion
+
+        # Plot the erosion data over time
+        average_erosion = accumulated_erosion / (len(annual_data) - 1)
+        print(f"Total Accumulated Erosion: {accumulated_erosion} km2/year")
+        print(f"Average Accumulated Erosion: {average_erosion} km2/year")
         # Plot the erosion data over time
         plt.figure(figsize=(10, 5))
         plt.plot(years[1:], erosion_data, marker='o', linestyle='-', color='red', label='Yearly Erosion (km2)')
@@ -353,4 +359,19 @@ class River:
         plt.grid(True)
         plt.legend()
         plt.show()
+
+        # Plot the accretion data over time
+        average_accretion = accumulated_accretion / (len(annual_data) - 1)
+        print(f"Total Accumulated Accretion: {accumulated_accretion} km2/year")
+        print(f"Average Accumulated Accretion: {average_accretion} km2/year")
+        plt.figure(figsize=(10, 5))
+        plt.plot(years[1:], accretion_data, marker='o', linestyle='-', color='red', label='Yearly Accretion (km2)')
+        plt.plot(years[1:], accumulated_accretion, marker='o', linestyle='-', color='blue', label='Accumulated Accretion (km2)')
+        plt.title('Annual and Accumulated Accretion Over Time')
+        plt.xlabel('Year')
+        plt.ylabel('Accretion (km2)')
+        plt.grid(True)
+        plt.legend()
+        plt.show()
+
 
