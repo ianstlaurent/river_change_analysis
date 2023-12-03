@@ -41,55 +41,53 @@ class River:
         self.erosion_volume = None
         self.accretion_volume = None
 
-    def process(self):
+    def load_mask(self):
         """
-        Process the river mask to extract the centerline.
+        Process the river mask geotiff file and store it as a mask in the River object and stores the year.
         Args:
             self (River): A River object.
         Returns:
-            np.ndarray: Binary mask of the centerline.
+            None. Modifies the River object mask and year.
         """
-        # Load river mask
         with rasterio.open(self.file_path) as dataset:
             self.mask = dataset.read(1)
             self.year = self.file_path[-8:-4]
 
     def water_mask_process(annual_data, min_size):
         """
-        Proceses the water mask to fill in small holes and remove small bars.
+        Processes the water mask to fill in small holes and remove small bars.
         Args:
-            self (River) or annual_data list of River Objects.
+            annual_data (River or list of River): The river data to process.
             min_size (int): Minimum size of a bar to be removed.
         Returns:
-            Creates a cleaned water mask and adds it to River object then plots it.
+            None. Modifies the River objects in place.
         """
-        if annual_data is type(list):
-            for i, data in enumerate(annual_data):
-                river = annual_data[i]
+        if isinstance(annual_data, list):
+            for river_mask in annual_data:
                 # Fill small holes in binary mask
                 kernel = np.ones((5,5),np.uint8)
-                watermask = cv2.morphologyEx(river.mask, cv2.MORPH_CLOSE, kernel)
-                if min_size is None | min_size <= 0:
-                        min_size = WATER_MASK_MIN_SIZE
+                watermask = cv2.morphologyEx(river_mask.mask, cv2.MORPH_CLOSE, kernel)
+                if min_size is None or min_size <= 0:
+                    min_size = WATER_MASK_MIN_SIZE
                 # Identify small bars and fill them in to create a filled water mask.
                 labels = measure.label(watermask == 0)
                 for region in measure.regionprops(labels):
                     if region.area < min_size:
                         watermask[labels == region.label] = 1
-                river.watermask = watermask
+                river_mask.watermask = watermask
         else:
-            river = annual_data
+            river_mask = annual_data
             # Fill small holes in binary mask
             kernel = np.ones((5,5),np.uint8)
-            watermask = cv2.morphologyEx(river.mask, cv2.MORPH_CLOSE, kernel)
-            if min_size is None | min_size <= 0:
-                    min_size = WATER_MASK_MIN_SIZE
+            watermask = cv2.morphologyEx(river_mask.mask, cv2.MORPH_CLOSE, kernel)
+            if min_size is None or min_size <= 0:
+                min_size = WATER_MASK_MIN_SIZE
             # Identify small bars and fill them in to create a filled water mask.
             labels = measure.label(watermask == 0)
             for region in measure.regionprops(labels):
                 if region.area < min_size:
                     watermask[labels == region.label] = 1
-            river.watermask = watermask
+            river_mask.watermask = watermask
 
     def _find_end_points(self):
         '''
@@ -147,7 +145,7 @@ class River:
             if river_mask.watermask is None:
                 river_mask.water_mask_process(WATER_MASK_MIN_SIZE)
             river_mask.centerline = thin(river_mask.watermask)
-            if max_distance_branch_removal is None | max_distance_branch_removal <= 0:
+            if max_distance_branch_removal is None or max_distance_branch_removal <= 0:
                 max_distance_branch_removal = MAX_DISTANCE_BRANCH_REMOVAL
             river_mask.prune_centerline(max_distance_branch_removal)
 
@@ -164,7 +162,7 @@ class River:
         colors = plt.cm.Spectral(np.linspace(0, 1, len(years_to_plot)))
         for i, year in enumerate(years_to_plot):
             river_mask = annual_data[year]
-            if river_mask.watermask is None | river_mask.centerline is None:
+            if river_mask.watermask is None or river_mask.centerline is None:
                 river_mask.water_mask_process(WATER_MASK_MIN_SIZE)
                 river_mask.centerline = thin(river_mask.watermask)
                 river_mask.prune_centerline(MAX_DISTANCE_BRANCH_REMOVAL)
@@ -270,12 +268,10 @@ class River:
         fig, ax = plt.subplots(figsize=(20, 10))
         cmap = plt.get_cmap('bwr')
         im = ax.imshow(migration, cmap=cmap, vmin=-1, vmax=1)
-
         # Create an axes for colorbar.
         cax = fig.add_axes([ax.get_position().x1 + 0.01, ax.get_position().y0, 0.02, ax.get_position().height])
         colorbar = plt.colorbar(im, cax=cax)
         colorbar.set_label('Erosion (Red) and Accretion (Blue)', rotation=270, labelpad=15)
-
         # Set the title to be in the center
         ax.set_title(f'River Migration: {self.year} Compared to {other.year}', pad=20, ha='center')
         plt.show()
