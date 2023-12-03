@@ -5,6 +5,7 @@ import numpy as np
 import rasterio
 import cv2
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 from shapely.geometry import LineString
 from scipy.ndimage import distance_transform_edt, gaussian_gradient_magnitude, binary_erosion
 from skimage.morphology import skeletonize, thin, remove_small_objects
@@ -112,7 +113,7 @@ class River:
                         end_points.append((y-1, x-1))
         return end_points
 
-    def prune_centerline(self, max_distance):
+    def _prune_centerline(self, max_distance):
         '''
         Prune the centerline by removing branches.
         Args:
@@ -147,7 +148,7 @@ class River:
             river_mask.centerline = thin(river_mask.watermask)
             if max_distance_branch_removal is None or max_distance_branch_removal <= 0:
                 max_distance_branch_removal = MAX_DISTANCE_BRANCH_REMOVAL
-            river_mask.prune_centerline(max_distance_branch_removal)
+            river_mask._prune_centerline(max_distance_branch_removal)
 
     def plot_centerline(annual_data):
         """
@@ -157,35 +158,36 @@ class River:
         Returns:
             Plotted centerline of the river over time.
         """
+        fig, ax = plt.subplots(figsize=(30, 20), dpi=500)
+        ax.set_facecolor('black')
         years_to_plot = range(0, len(annual_data), 5)
-        fig, ax = plt.subplots(figsize=(20, 15))
         colors = plt.cm.Spectral(np.linspace(0, 1, len(years_to_plot)))
+        legend_elements = []
         for i, year in enumerate(years_to_plot):
-            river_mask = annual_data[year]
-            if river_mask.watermask is None or river_mask.centerline is None:
-                river_mask.water_mask_process(WATER_MASK_MIN_SIZE)
-                river_mask.centerline = thin(river_mask.watermask)
-                river_mask.prune_centerline(MAX_DISTANCE_BRANCH_REMOVAL)
-            ax.plot(river_mask.centerline, color=colors[i], alpha=0.6, label=str(river_mask.year))
+            river = annual_data[year]
+            y, x = np.where(river.centerline)
+            ax.scatter(x, y, color=colors[i], alpha=0.9, s=1.5, edgecolors='none')
+            legend_elements.append(Line2D([0], [0], marker='o', color='w', label=str(river.year),
+                                            markerfacecolor=colors[i], markersize=10))
         ax.set_ylim(ax.get_ylim()[::-1])
-        ax.set_title('River Centerline Evolution Over 30 Years')
-        ax.legend(loc='best', fontsize='x-small')
+        ax.set_title('River Centerline Evolution Over Time')
+        ax.legend(handles=legend_elements, loc='best')
         ax.set_xlabel('X Coordinate')
         ax.set_ylabel('Y Coordinate')
         ax.set_aspect('equal')
         plt.show()
 
-    def _extract_river_edges(binary_mask):
+    def _extract_river_edges(self):
         """
         Extract the edges of the river from a binary mask.
         Args:
-            binary_mask (np.ndarray): Binary mask of the river.
+            self (River Object).
         Returns:
             np.ndarray: Binary mask of the river edges.
         """
         # Erode the binary mask to get the edges
-        eroded_mask = binary_erosion(binary_mask)
-        edges = binary_mask & ~eroded_mask
+        eroded_mask = binary_erosion(self.mask)
+        edges = self.mask & ~eroded_mask
         return edges
 
     def _plot_edges(ax, edges, color, alpha, label):
@@ -296,10 +298,10 @@ class River:
         # Create the animation
         anim = FuncAnimation(fig, animate, init_func=init, frames=len(annual_data), interval=1000)
         plt.show()
-        if folder_path is None:
-            folder_path = os.getcwd()
-            folder_path = folder_path + 'river_centerline_evolution.mp4'
-        anim.save(folder_path, writer='ffmpeg')
+        if folder_file_path is None:
+            folder_file_path = os.getcwd()
+            folder_file_path = folder_file_path + 'river_centerline_evolution.mp4'
+        anim.save(folder_file_path, writer='ffmpeg')
 
     def quantify_erosion(annual_data):
         """

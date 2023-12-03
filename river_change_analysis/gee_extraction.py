@@ -1,19 +1,12 @@
-# GEE River Binary Mask Extraction
-# Modified from Example Work Flow in:
+# GEE River Binary Mask and DEM Extraction
+# Modified Javascript from:
 # Boothroyd, RJ, Williams, RD, Hoey, TB, Barrett, B, Prasojo, OA. Applications of Google Earth Engine
 # in fluvial geomorphology for detecting river channel change. WIREs Water.
 # 2021; 8:e21496. https://doi.org/10.1002/wat2.1496
-
 import ee
-from skimage.morphology import thin
-import numpy as np
-import geemap
-
 
 CLOUD_SHADOW_BIT_MASK = 1 << 3
 CLOUDS_BIT_MASK = 1 << 5
-
-
 
 ee.Authenticate()
 ee.Initialize()
@@ -94,7 +87,6 @@ def import_dem(roi, file_name_prefix, folder_name):
     )
     task2.start()
 
-
 def process_images(start_year, end_year, month_day_start, month_day_end, roi, folder_name, file_name):
 
     if (start_year == None) | (end_year == None):
@@ -163,22 +155,8 @@ def process_images(start_year, end_year, month_day_start, month_day_end, roi, fo
         smooth_map_p50 = active_p50.focal_mode(radius=10, kernelType='octagon', units='pixels', iterations=1).mask(active_p50.gte(1))
         noise_removal_p50 = active_p50.updateMask(active_p50.connectedPixelCount(cleaning_pixels, False).gte(cleaning_pixels)).unmask(smooth_map_p50)
         noise_removal_p50_Masked = noise_removal_p50.updateMask(noise_removal_p50.gt(0))
-        Wetted_channel = waterMasked_p50
         river_mask = noise_removal_p50_Masked
 
-        filename = file_name + '_wetted_channel_' + str(year)
-        task = ee.batch.Export.image.toDrive(
-            image = Wetted_channel,
-            description = filename,
-            fileNamePrefix = file_name + str(year),
-            region = roi.getInfo()['coordinates'],
-            scale = 30,
-            fileFormat = 'GeoTIFF',
-            folder = folder_name,
-            maxPixels = 1e12
-        )
-        task.start()
-        '''
         filename = file_name + '_river_mask_' + str(year)
         task = ee.batch.Export.image.toDrive(
             image = river_mask,
@@ -191,7 +169,6 @@ def process_images(start_year, end_year, month_day_start, month_day_end, roi, fo
             maxPixels = 1e12
         )
         task.start()
-        '''
 
 
 
