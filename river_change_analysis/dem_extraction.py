@@ -1,5 +1,4 @@
 #Python Script to download DEMs from Google Earth Engine
-import ee
 from rasterio.plot import show
 import matplotlib.pyplot as plt
 import rasterio
@@ -22,7 +21,7 @@ class dem:
             self.slope = src.read(1)
 
     def plot_dem(self):
-        fig, axs = plt.subplots(1, 3, figsize=(30,10))  # 1 row, 3 columns
+        fig, axs = plt.subplots(1, 3, figsize=(30,10))
 
         show(self.dem, ax=axs[0])
         axs[0].set_title('DEM')
