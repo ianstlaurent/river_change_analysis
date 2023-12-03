@@ -11,10 +11,11 @@ from scipy.ndimage import distance_transform_edt, gaussian_gradient_magnitude
 from skimage.morphology import skeletonize, thin
 from skimage.filters import threshold_otsu
 from scipy.ndimage import binary_erosion
-from typing import List, Tuple
+
+
 
 class river:
-    def __init__(self, mask_file_path: str):
+    def __init__(self, mask_file_path):
         """
         Initialize a River object.
 
@@ -39,7 +40,8 @@ class river:
         self.erosion_volume = None
         self.accretion_volume = None
 
-    def process(self) -> None:
+
+    def process(self):
         """
         Process the river mask to extract the centerline.
         """
@@ -63,7 +65,8 @@ class river:
             # Prune the centerline to remove spurious branches
             self.centerline = thin(centerline_raw, max_iter=500)  # Adjust max_iter as needed
 
-    def extract_river_edges(self, binary_mask: np.ndarray) -> np.ndarray:
+
+    def extract_river_edges(binary_mask):
         """
         Extract the edges of the river from a binary mask.
 
@@ -73,12 +76,11 @@ class river:
         Returns:
             np.ndarray: Binary mask of the river edges.
         """
+        # Erode the binary mask to get the edges
         eroded_mask = binary_erosion(binary_mask)
         edges = binary_mask & ~eroded_mask
         return edges
 
-
-    @staticmethod
     def plot_river_edges(ax, edges, color, alpha, label):
         """
         Plot the edges of the river on a given axes.
@@ -93,7 +95,7 @@ class river:
         y, x = np.where(edges)
         ax.scatter(x, y, color=color, alpha=alpha, s=6, label=label, edgecolors='none')
 
-    @staticmethod
+
     def plot_river_migration(data):
         """
         Plot the migration of the river over time.
@@ -144,33 +146,25 @@ class river:
         plt.title('Athabasca River Mask ' + str(self.year))
         plt.show()
 
-    def plot_river_migration_2(self, other: 'River') -> None:
-        """
-        Plot the migration of the river.
+    def plot_migration(self, other):
+      migration = self.mask.astype(int) - other.mask.astype(int)
+      # Plot the migration
+      # Positive values (areas that are only in the current year's mask) in red
+      # Negative values (areas that are only in the other year's mask) in blue
+      fig, ax = plt.subplots(figsize=(20, 10))
+      cmap = plt.get_cmap('bwr')
+      im = ax.imshow(migration, cmap=cmap, vmin=-1, vmax=1)
 
-        Args:
-            other (River): Another River object to compare with.
-        """
-        migration = self.mask.astype(int) - other.mask.astype(int)
-        # Plot the migration
-        # Positive values (areas that are only in the current year's mask) in red
-        # Negative values (areas that are only in the other year's mask) in blue
-        fig, ax = plt.subplots(figsize=(20, 10))
-        cmap = plt.get_cmap('bwr')
-        im = ax.imshow(migration, cmap=cmap, vmin=-1, vmax=1)
+      # Create an axes for colorbar.
+      cax = fig.add_axes([ax.get_position().x1 + 0.01, ax.get_position().y0, 0.02, ax.get_position().height])
+      colorbar = plt.colorbar(im, cax=cax)  # Place the colorbar in the axes created
+      colorbar.set_label('Erosion (Red) and Accretion (Blue)', rotation=270, labelpad=15)
 
-        # Create an axes for colorbar.
-        cax = fig.add_axes([ax.get_position().x1 + 0.01, ax.get_position().y0, 0.02, ax.get_position().height])
-        colorbar = plt.colorbar(im, cax=cax)  # Place the colorbar in the axes created
-        colorbar.set_label('Erosion (Red) and Accretion (Blue)', rotation=270, labelpad=15)
+      # Set the title to be in the center
+      ax.set_title(f'River Migration: {self.year} Compared to {other.year}', pad=20, ha='center')
+      plt.show()
 
-        # Set the title to be in the center
-        ax.set_title(f'River Migration: {self.year} Compared to {other.year}', pad=20, ha='center')
-        plt.show()
-
-
-
-    def quantify_migration(self, other: 'River', dem: np.ndarray, pixel_area: float) -> None:
+    def quantify_migration(self, other, dem, pixel_area):
         """
         Quantify the migration of the river.
 
