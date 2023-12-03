@@ -116,7 +116,7 @@ class River:
         # Plot each year's river edges
         for i, year in enumerate(years_to_plot):
             river_mask = data[year]
-            edges = river_mask.extract_river_edges()
+            edges = river_mask.extract_river_edges(river_mask)
             color = colors[i]
             alpha = 0.6
 
