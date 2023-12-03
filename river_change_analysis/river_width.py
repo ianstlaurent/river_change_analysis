@@ -49,21 +49,72 @@ class River:
         with rasterio.open(self.file_path) as dataset:
             self.mask = dataset.read(1)  # Read the first band into a 2D array
             self.year = self.file_path[-8:-4]
-            # Step 1: Distance transform
-            distance = distance_transform_edt(self.mask)
 
-            # Step 2: Gradient
-            gradient = gaussian_gradient_magnitude(distance, sigma=1)
+    def find_end_points(centerline):
+        # Use a more sensitive method to identify end points
+        # Create a padded version of the centerline to handle edge cases
+        padded_centerline = np.pad(centerline, 1, mode='constant', constant_values=0)
+        end_points = []
+        # Iterate through centerline
+        for y in range(1, padded_centerline.shape[0] - 1):
+            for x in range(1, padded_centerline.shape[1] - 1):
+                if padded_centerline[y, x]:  # If current pixel is part of the centerline
+                    # Count the number of 8-connected neighbors
+                    neighborhood = padded_centerline[y-1:y+2, x-1:x+2]
+                    num_neighbors = np.sum(neighborhood) - 1  # Subtract 1 for the center pixel
+                    if num_neighbors == 1:
+                        # If only one neighbor, it's an end point
+                        end_points.append((y-1, x-1))  # Adjust for the padding
+        return end_points
 
-            # Threshold the gradient
-            thresh = threshold_otsu(gradient)
-            binary = gradient > thresh
+    def plot_centerline(annual_data):
+        years = len(annual_data)
+        MAX_DISTANCE_BRANCH_REMOVAL = 100
+        years_to_plot = range(0, years, 5)
+        fig, ax = plt.subplots(figsize=(20, 15))
+        for i, year in enumerate(years_to_plot):
+            river_mask = annual_data[year]
+            river_mask.centerline = river_mask.prune_centerline(MAX_DISTANCE_BRANCH_REMOVAL)
+            alpha = 0.6
+            actual_year = river_mask.year
+        ax.set_ylim(ax.get_ylim()[::-1])
+        ax.set_title('River Centerline Evolution Over 30 Years')
+        ax.legend(loc='best', fontsize='x-small')
+        ax.set_xlabel('X Coordinate')
+        ax.set_ylabel('Y Coordinate')
+        ax.set_aspect('equal')
+        plt.show()
 
-            # Step 3: Skeletonize to get raw centerline
-            centerline_raw = skeletonize(binary)
+    def plot_centerline(annual_data):
+        """
+        Plot the centerline over time.
 
-            # Prune the centerline to remove spurious branches
-            self.centerline = thin(centerline_raw, max_iter=500)  # Adjust max_iter as needed
+        Args:
+            data (list): A list of River objects representing the river at different points in time.
+        """
+        years = len(annual_data)
+        MAX_DISTANCE_BRANCH_REMOVAL = 100
+
+        years_to_plot = range(0, years, 5)
+
+        fig, ax = plt.subplots(figsize=(20, 15))
+
+        # Plot each year's centerline
+        for i, year in enumerate(years_to_plot):
+            river_mask = annual_data[year]
+            river_mask.centerline = river_mask.pruned_centerline(MAX_DISTANCE_BRANCH_REMOVAL)
+            alpha = 0.6
+            actual_year = river_mask.year
+
+        ax.set_ylim(ax.get_ylim()[::-1])
+        ax.set_title('River Centerline Evolution Over 30 Years')
+        ax.legend(loc='best', fontsize='x-small')
+        ax.set_xlabel('X Coordinate')
+        ax.set_ylabel('Y Coordinate')
+        ax.set_aspect('equal')
+
+        #plt.savefig('river_centerline_evolution_cleaned.png', dpi=300)
+        plt.show()
 
 
     def _extract_river_edges(binary_mask):
@@ -189,21 +240,35 @@ class River:
 
     def plot_erosion(annual_data):
         """
-        Plot erosion over time
+        Plot erosion over time and accumulated erosion over time.
 
         Args:
         Annual Data (list): A list of River objects representing the river at different points in time.
         """
+        # Sort the annual_data list by year
+        annual_data.sort(key=lambda river: int(river.year))
+
         erosion_data = []
         years = [int(river.year) for river in annual_data]
         for i in range(1, len(annual_data)):
             erosion_data.append(annual_data[i].erosion)
 
+        # Calculate the accumulated erosion
+        accumulated_erosion = np.cumsum(erosion_data)
+
+        # Calculate the average erosion rate
+        average_erosion_rate = accumulated_erosion / (len(years) - 1)
+
+        print(f"Average erosion rate: {average_erosion_rate} km2/year")
+
         # Plot the erosion data over time
         plt.figure(figsize=(10, 5))
-        plt.plot(years[1:], erosion_data, marker='o', linestyle='-', color='red')
-        plt.title('Annual Erosion Over Time')
+        plt.plot(years[1:], erosion_data, marker='o', linestyle='-', color='red', label='Yearly Erosion (km2)')
+        plt.plot(years[1:], accumulated_erosion, marker='o', linestyle='-', color='blue', label='Accumulated Erosion (km2)')
+        plt.title('Annual and Accumulated Erosion Over Time')
         plt.xlabel('Year')
-        plt.ylabel('Erosion (Quantity)')
+        plt.ylabel('Erosion (km2)')
         plt.grid(True)
+        plt.legend()
         plt.show()
+
