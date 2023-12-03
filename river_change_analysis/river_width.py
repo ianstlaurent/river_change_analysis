@@ -14,7 +14,7 @@ from scipy.ndimage import binary_erosion
 
 
 
-class river:
+class River:
     def __init__(self, mask_file_path):
         """
         Initialize a River object.
