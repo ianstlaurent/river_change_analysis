@@ -190,9 +190,9 @@ class River:
         edges = self.mask & ~eroded_mask
         return edges
 
-    def _plot_edges(ax, edges, color, alpha, label):
+    def _plot_edges(self, ax, edges, color, alpha, label):
         """
-        Plot the edges of the river on a given axes.
+        Plot the edges of the river, islands, and sandbars.
         Args:
             ax (matplotlib.axes.Axes): The axes on which to plot the edges.
             edges (np.ndarray): Binary mask of the river edges.
@@ -200,7 +200,7 @@ class River:
             alpha (float): The transparency level of the edges.
             label (str): The label for the edges in the legend.
         Returns:
-            Plot of the edges of the river on a given axes.
+            Plot of the edges of the river
         """
         y, x = np.where(edges)
         ax.scatter(x, y, color=color, alpha=alpha, s=6, label=label, edgecolors='none')
@@ -315,7 +315,7 @@ class River:
             if annual_data[i].watermask is None:
                 annual_data[i].water_mask_process(WATER_MASK_MIN_SIZE)
             erosion = (annual_data[i].watermask.astype(int) - annual_data[i-1].watermask.astype(int)) > 0
-            accretion = (annual_data[i].watermask.astype(int) - annual_data[i-1].watermask.astype(int)) > 0
+            accretion = (annual_data[i-1].watermask.astype(int) - annual_data[i].watermask.astype(int)) > 0
             # Calculate the area of erosion and accretion
             annual_data[i].erosion = np.sum(erosion * (30**2)) / 1000000
             annual_data[i].accretion = np.sum(accretion * (30**2)) / 1000000
