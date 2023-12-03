@@ -87,7 +87,7 @@ file_name
 
 ```python
 # Define the path to the folder where the binary river masks are stored.
-folder_path = "CSC_497"
+folder= "CSC_497"
 
 # Define the pattern that the filenames of the binary river masks follow.
 file_pattern = "Reach_1_"
@@ -101,7 +101,7 @@ year_end = 2021
 # Process the images for the specified years (e.g. 2000 to 2010) and region.
 # This function creates tasks in the Google Earth Engine (GEE) task manager.
 # You'll need to go to the GEE task manager (https://code.earthengine.google.com/tasks) and accept the tasks to start the processing.
-rca.process_images(year_start, year_end, date_start, date_end, region, folder_path, file_pattern)
+rca.process_images(year_start, year_end, date_start, date_end, region, folder, file_pattern)
 ```
 
 ### Import Landsat Imagery
@@ -109,12 +109,73 @@ rca.process_images(year_start, year_end, date_start, date_end, region, folder_pa
 The processing of the images may require some time to finish depending on the number of years being processes. Once all the processing tasks are completed, you can import the Python masks by calling the mask_import function.
 
 ```python
+binary_mask_folder_path = "/content/drive/MyDrive/CSC_497"
+binary_mask_file_pattern = "Active_channel_binary_mask_reach_1_"
 # Import the binary masks for the rivers.
 # The masks are located in the folder specified by 'folder_path', and their filenames follow the pattern specified by 'file_pattern'.
-rivers_files = rca.mask_import(folder_path, file_pattern)
+rivers_files = rca.mask_import(binary_mask_folder_path, binary_mask_file_pattern)
 ```
 
-###
+### Create River Binary Mask Objects
+
+```python
+# Create an empty list to store the analysis results for each year.
+annual_data = []
+
+# Process each river file.
+for file in rivers_files:
+
+    # Create a 'river' object for the current file. This object represents a river for a specific year.
+    yearly_analysis = rca.River(file)
+
+    # Process the river data for the current year. This includes calculating the river width and identifying areas of erosion and accretion.
+    yearly_analysis.load_mask()
+
+    # Add the analysis results for the current year to the 'annual_data' list.
+    annual_data.append(yearly_analysis)
+```
+
+### Process River Binary Masks
+
+```python
+# Create Filled Water Channel Masks for each River object
+# Specify the minimum island/bar size to be removed (1000 is recommended)
+water_mask_min_size = 1000
+rca.River.water_mask_process(annual_data, water_mask_min_size)
+
+# Create Centerlines for each River object
+# Specify the max branch removal for each centerline, the higher the number the more points removed from the centerline (100 is recommended)
+max_distance_branch_removal = 100
+rca.River.process_centerline(annual_data, max_distance_branch_removal)
+```
+
+### Calculate Erosion/Accretion
+
+```python
+# Calculate then plot erosion/accretion for each River object
+rca.River.quantify_erosion(annual_data)
+```
+
+### Plot All the Results
+
+```python
+rca.River.plot_erosion(annual_data)
+
+# Plot the centerlines over time
+rca.River.plot_centerline(annual_data)
+
+# Create an animation of the centerline migration over time
+# Provide a direct path along with filename and .mp4
+folder_path_anim = '/content/drive/MyDrive/CSC_497/river_centerline_evolution.mp4'
+rca.River.animate_centerline_migration(annual_data,folder_path_anim)
+
+#Plot the river edges over time
+rca.River.plot_river_edges(annual_data)
+```
+
+
+
+
 
 
 
