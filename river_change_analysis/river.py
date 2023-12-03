@@ -30,19 +30,8 @@ class River:
         self.mask = None
         self.watermask = None
         self.centerline = None
-        self.edges = None
-        self.buffered = None
-        self.widths = None
-        self.avg_width = None
-        self.buffer_distance = None
-        self.wra = None
-        self.wavg = None
-        self.x_coords = None
-        self.y_coords = None
         self.erosion = None
         self.accretion = None
-        self.erosion_volume = None
-        self.accretion_volume = None
 
     def load_mask(self):
         """
@@ -374,8 +363,17 @@ class River:
 
             # Calculate the volume of erosion and accretion
             if DEM is not None:
-                annual_data[i].erosion_volume = np.sum(erosion * DEM * (30**2)) / 1000000
-                annual_data[i].accretion_volume = np.sum(accretion * DEM * (30**2)) / 1000000
+                erosion_elevation = DEM[erosion]
+                accretion_elevation = DEM[accretion]
+                plt.figure(figsize=(10, 5))
+                plt.scatter(range(len(erosion_elevation)), erosion_elevation, color='r', label='Erosion')
+                plt.scatter(range(len(accretion_elevation)), accretion_elevation, color='b', label='Accretion')
+                plt.title('Elevation at Locations of Erosion and Accretion')
+                plt.xlabel('Location')
+                plt.ylabel('Elevation')
+                plt.legend()
+                plt.show()
+
 
     def plot_erosion(annual_data):
         """
