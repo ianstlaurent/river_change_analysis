@@ -205,23 +205,23 @@ class River:
         y, x = np.where(edges)
         ax.scatter(x, y, color=color, alpha=alpha, s=6, label=label, edgecolors='none')
 
-    def plot_river_edges(data):
+    def plot_river_edges(annual_data):
         """
         Plot the edges of the river over time.
         Args:
-            data (list): A list of River objects representing the river at different points in time.
+            annual_data (list): A list of River objects representing the river at different points in time.
         Returns:
             Plotted edges of the river over time.
         """
-        years_to_plot = range(0, len(data), 5)
+        years_to_plot = range(0, len(annual_data)), 5)
         fig, ax = plt.subplots(figsize=(20, 15))
         colors = plt.cm.Spectral(np.linspace(0, 1, len(years_to_plot)))
 
         # Plot each year's river edges
         for i, year in enumerate(years_to_plot):
-            river_mask = data[year]
+            river_mask = annual_data[year]
             edges = river_mask._extract_river_edges()
-            river_mask._plot_edges(ax, edges, colors[i], 0.6, label=str(river_mask.year))
+            river_mask._plot_edges(ax, edges, colors[i], 0.6, str(river_mask.year))
 
         ax.set_ylim(ax.get_ylim()[::-1])
         ax.set_title('River Edge Evolution Over 30 Years')
