@@ -66,7 +66,7 @@ class River:
             self.centerline = thin(centerline_raw, max_iter=500)  # Adjust max_iter as needed
 
 
-    def extract_river_edges(binary_mask):
+    def _extract_river_edges(binary_mask):
         """
         Extract the edges of the river from a binary mask.
 
@@ -81,7 +81,7 @@ class River:
         edges = binary_mask & ~eroded_mask
         return edges
 
-    def plot_river_edges(ax, edges, color, alpha, label):
+    def _plot_edges(ax, edges, color, alpha, label):
         """
         Plot the edges of the river on a given axes.
 
@@ -96,9 +96,9 @@ class River:
         ax.scatter(x, y, color=color, alpha=alpha, s=6, label=label, edgecolors='none')
 
 
-    def plot_river_migration(data):
+    def plot_river_edges(data):
         """
-        Plot the migration of the river over time.
+        Plot the edges of the river over time.
 
         Args:
             data (list): A list of River objects representing the river at different points in time.
@@ -116,13 +116,13 @@ class River:
         # Plot each year's river edges
         for i, year in enumerate(years_to_plot):
             river_mask = data[year]
-            edges = river_mask.extract_river_edges()
+            edges = river_mask._extract_river_edges()
             color = colors[i]
             alpha = 0.6
 
             actual_year = river_mask.year
 
-            river_mask.plot_river_edges(ax, edges, color, alpha, label=str(actual_year))
+            river_mask._plot_edges(ax, edges, color, alpha, label=str(actual_year))
 
         ax.set_ylim(ax.get_ylim()[::-1])
         ax.set_title('River Edge Evolution Over 30 Years')
@@ -134,7 +134,7 @@ class River:
         #plt.savefig('river_edge_evolution_cleaned.png', dpi=300)
         plt.show()
 
-    def plot(self):
+    def plot_self(self):
         """
         Plot the river mask and edges.
         """
@@ -146,7 +146,7 @@ class River:
         plt.title('Athabasca River Mask ' + str(self.year))
         plt.show()
 
-    def plot_1_year_migration(self, other):
+    def plot_river_migration(self, other):
       migration = self.mask.astype(int) - other.mask.astype(int)
       # Plot the migration
       # Positive values (areas that are only in the current year's mask) in red
@@ -164,7 +164,7 @@ class River:
       ax.set_title(f'River Migration: {self.year} Compared to {other.year}', pad=20, ha='center')
       plt.show()
 
-    def quantify_erosion(annual_data)):
+    def quantify_erosion(annual_data):
         """
         Quantify the erosion of the river.
         #dem and pixel area
@@ -201,7 +201,7 @@ class River:
 
         # Plot the erosion data over time
         plt.figure(figsize=(10, 5))
-        plt.plot(years[1:], annual_data, marker='o', linestyle='-', color='red')
+        plt.plot(years[1:], erosion_data, marker='o', linestyle='-', color='red')
         plt.title('Annual Erosion Over Time')
         plt.xlabel('Year')
         plt.ylabel('Erosion (Quantity)')
