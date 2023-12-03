@@ -51,6 +51,7 @@ def import_dem(roi, file_name_prefix, folder_name):
     dem = ee.Image('USGS/SRTMGL1_003').clip(roi)
     elevation = dem.select('elevation')
     slope = ee.Terrain.slope(elevation)
+
     task = ee.batch.Export.image.toDrive(
             image = dem,
             description = file_name_prefix + '_dem',
@@ -64,18 +65,6 @@ def import_dem(roi, file_name_prefix, folder_name):
     task.start()
 
     task1 = ee.batch.Export.image.toDrive(
-            image = elevation,
-            description = file_name_prefix + '_elevation',
-            fileNamePrefix = file_name_prefix + '_elevation',
-            region = roi.getInfo()['coordinates'],
-            scale = 30,
-            fileFormat = 'GeoTIFF',
-            folder = folder_name,
-            maxPixels = 1e12
-    )
-    task1.start()
-
-    task2 = ee.batch.Export.image.toDrive(
             image = slope,
             description = file_name_prefix + '_slope',
             fileNamePrefix = file_name_prefix + '_slope',
@@ -85,7 +74,7 @@ def import_dem(roi, file_name_prefix, folder_name):
             folder = folder_name,
             maxPixels = 1e12
     )
-    task2.start()
+    task1.start()
 
 def process_images(start_year, end_year, month_day_start, month_day_end, roi, folder_name, file_name):
 

@@ -15,6 +15,8 @@ from matplotlib.animation import FuncAnimation
 
 MAX_DISTANCE_BRANCH_REMOVAL = 100
 WATER_MASK_MIN_SIZE = 1000
+DEM = None
+SLOPE = None
 
 class River:
     def __init__(self, mask_file_path):
@@ -53,6 +55,56 @@ class River:
         with rasterio.open(self.file_path) as dataset:
             self.mask = dataset.read(1)
             self.year = self.file_path[-8:-4]
+
+    def load_dem(self, dem_files):
+        """
+        Process the dem geotiff file and store the dem and slope
+        Args:
+            self (River): A River object.
+            dem_files (list): A list of dem files.
+        Returns:
+            None. Modifies the dem and slope.
+        """
+        if dem_files is None:
+            print("No files provided")
+
+        for file in dem_files:
+            if (file.contains('slope')):
+                slope = file
+            elif (file.contains('dem')):
+                dem = file
+        if slope is not None:
+            with rasterio.open(slope) as src:
+                SLOPE = src.read(1)
+        if dem is not None:
+            with rasterio.open(dem) as src:
+                DEM  = src.read(1)
+        # Cut out the non-river areas
+        mask = DEM != 0
+        DEM = np.where(mask, DEM, np.nan)
+        SLOPE = np.where(mask, SLOPE, np.nan)
+
+    def plot_dem():
+        """
+        Plot the dem and slope.
+        Args:
+            None
+        Returns:
+            Plotted dem and slope.
+        """
+        # Plot DEM
+        plt.figure(figsize=(10, 10))
+        img = plt.imshow(DEM, cmap='terrain', interpolation='nearest', aspect='auto')
+        plt.colorbar(img, label='Elevation (meters)')
+        plt.title('SRTM 30m DEM')
+        plt.show()
+
+        # Plot Slope
+        plt.figure(figsize=(10, 10))
+        img = plt.imshow(SLOPE, cmap='terrain', interpolation='nearest', aspect='auto')
+        plt.colorbar(img, label='Slope (Degrees)')
+        plt.title('SRTM 30m Slope')
+        plt.show()
 
     def water_mask_process(annual_data, min_size):
         """
@@ -321,8 +373,9 @@ class River:
             annual_data[i].accretion = np.sum(accretion * (30**2)) / 1000000
 
             # Calculate the volume of erosion and accretion
-            #annual_data[i].erosion_volume = np.sum(erosion * dem * (pixel_area**2)) / 1000000
-            #annual_data[i].accretion_volume = np.sum(accretion * dem * (pixel_area**2)) / 1000000
+            if DEM is not None:
+                annual_data[i].erosion_volume = np.sum(erosion * DEM * (30**2)) / 1000000
+                annual_data[i].accretion_volume = np.sum(accretion * DEM * (30**2)) / 1000000
 
     def plot_erosion(annual_data):
         """

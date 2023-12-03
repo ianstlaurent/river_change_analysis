@@ -37,24 +37,13 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.ndimage import binary_erosion
-
-# Import the Earth Engine Python API library
-import ee
-
-# Trigger the authentication flow. This will prompt you to sign in to your Google account.
-# You'll need to allow the Earth Engine Python API to access your account,
-# then you'll be given a code to paste into the prompt in Colab.
-ee.Authenticate()
-
-# Initialize the Earth Engine Python API. This prepares the API to make requests to Earth Engine's servers.
-# You need to do this before you can use Earth Engine functions.
-ee.Initialize()
+from rasterio.plot import show
+import rasterio
 
 # Import the Google Colab drive module
 from google.colab import drive
 
-# Mount your Google Drive. This will make the files in your Google Drive accessible from this Google Colab notebook.
-# You'll be prompted to sign in to your Google account, and you'll need to allow Colab to access your Google Drive.
+# Mount your Google Drive. This will make the files in your Google Drive accessible from this Google Colab notebook.You'll be prompted to sign in to your Google account, and you'll need to allow Colab to access your Google Drive.
 drive.mount('/content/drive')
 ```
 
@@ -64,6 +53,7 @@ The first step after installing the Python package is to import it into Google C
 
 ```python
 import river_change_analysis as rca
+# This will trigger the authentication flow and will prompt you to sign in to your Google account. You'll need to allow the Earth Engine Python API to access your account, then you'll be given a code to paste into the prompt in Google Colab.
 ```
 ### Define Region of Interest
 
@@ -95,8 +85,8 @@ file_pattern = "Reach_1_"
 date_start = '-06-01'
 date_end = '-10-01'
 
-year_start = 1986
-year_end = 2021
+year_start = 2000
+year_end = 2013
 
 # Process the images for the specified years (e.g. 2000 to 2010) and region.
 # This function creates tasks in the Google Earth Engine (GEE) task manager.
@@ -114,6 +104,41 @@ binary_mask_file_pattern = "Active_channel_binary_mask_reach_1_"
 # Import the binary masks for the rivers.
 # The masks are located in the folder specified by 'folder_path', and their filenames follow the pattern specified by 'file_pattern'.
 rivers_files = rca.mask_import(binary_mask_folder_path, binary_mask_file_pattern)
+```
+
+### Import 30m DEM
+
+Import 30m DEM, elevation and slope geotiffs cropped to the ROI.
+
+```python
+# Choose DEM file name pattern
+dem_file_pattern = "Athabasca"
+# Choose folder in Google Drive
+dem_folder = "CSC_497"
+# Extract from GEE DEM, Elevation, and slope GeoTiffs
+rca.gee_extraction.import_dem(region,dem_file_pattern,folder_path)
+
+# Grab the DEM, Elevation, and slope GeoTiffs from the Google Drive
+dem_folder_path = "/content/drive/MyDrive/CSC_497"
+dem_files = rca.mask_import(dem_folder_path, dem_file_pattern)
+
+# Check which file is which
+print(dem_files)
+
+# Assign variables to the file paths
+dem = dem_files[2]
+elevation = dem_files[1]
+slope = dem_files[0]
+
+with rasterio.open(elevation) as src:
+  elevation_data = src.read(1)
+
+with rasterio.open(slope) as src:
+  slope_data = src.read(1)
+
+with rasterio.open(dem) as src:
+  dem_data = src.read(1)
+
 ```
 
 ### Create River Binary Mask Objects
