@@ -85,15 +85,19 @@ class River:
             print("No DEM")
         if cls.SLOPE is None:
             print("No Slope")
+
+        # Calculate aspect ratio
+        aspect_ratio = cls.DEM.shape[1] / cls.DEM.shape[0]
+
         # Plot DEM
-        plt.figure(figsize=(10, 10))
+        plt.figure(figsize=(10*aspect_ratio, 10))
         img = plt.imshow(cls.DEM, cmap='terrain', interpolation='nearest', aspect='auto')
         plt.colorbar(img, label='Elevation (meters)')
         plt.title('SRTM 30m DEM')
         plt.show()
 
         # Plot Slope
-        plt.figure(figsize=(10, 10))
+        plt.figure(figsize=(10*aspect_ratio, 10))
         img = plt.imshow(cls.SLOPE, cmap='terrain', interpolation='nearest', aspect='auto')
         plt.colorbar(img, label='Slope (Degrees)')
         plt.title('SRTM 30m Slope')
@@ -203,7 +207,8 @@ class River:
         Returns:
             Plotted centerline of the river over time.
         """
-        fig, ax = plt.subplots(figsize=(30, 20), dpi=500)
+        aspect_ratio = annual_data[0].mask.shape[1] / annual_data[0].mask.shape[0]
+        fig, ax = plt.subplots(figsize=(20*aspect_ratio, 20), dpi=500)
         ax.set_facecolor('black')
         years_to_plot = range(0, len(annual_data), 5)
         colors = plt.cm.Spectral(np.linspace(0, 1, len(years_to_plot)))
@@ -259,7 +264,8 @@ class River:
             Plotted edges of the river over time.
         """
         years_to_plot = range(0, len(annual_data), 5)
-        fig, ax = plt.subplots(figsize=(20, 15))
+        aspect_ratio = annual_data[0].mask.shape[1] / annual_data[0].mask.shape[0]
+        fig, ax = plt.subplots(figsize=(20*aspect_ratio, 20), dpi=500)
         colors = plt.cm.Spectral(np.linspace(0, 1, len(years_to_plot)))
 
         # Plot each year's river edges
@@ -285,7 +291,8 @@ class River:
             Plotted river mask.
         """
         # Plot the mask
-        fig, ax = plt.subplots(figsize=(12, 8))
+        aspect_ratio = self.mask.shape[1] / self.mask.shape[0]
+        fig, ax = plt.subplots(figsize=(20*aspect_ratio, 20), dpi=500)
         # Plot the mask with a colormap that represents water
         ax.imshow(self.mask, cmap='Blues', interpolation='none', alpha=0.7)
         plt.title('Athabasca River Mask' + str(self.year))
@@ -312,7 +319,8 @@ class River:
         # Plot the migration
         # Positive values (areas that are only in the current year's mask) in red
         # Negative values (areas that are only in the other year's mask) in blue
-        fig, ax = plt.subplots(figsize=(20, 10))
+        aspect_ratio = self.mask.shape[1] / self.mask.shape[0]
+        fig, ax = plt.subplots(figsize=(20*aspect_ratio, 20), dpi=500)
         cmap = plt.get_cmap('bwr')
         im = ax.imshow(migration, cmap=cmap, vmin=-1, vmax=1)
         # Create an axes for colorbar.
@@ -332,7 +340,8 @@ class River:
         Returns:
             Animated centerline migration over time.
         '''
-        fig, ax = plt.subplots(figsize=(30, 50))
+        aspect_ratio = annual_data[0].mask.shape[1] / annual_data[0].mask.shape[0]
+        fig, ax = plt.subplots(figsize=(50*aspect_ratio, 50))
         ax.set_title('Athabasca River (Reach 1) Centerline Migration 1986-2021')
         im = ax.imshow(annual_data[0].centerline, cmap='gray')
         def init():
@@ -396,7 +405,8 @@ class River:
         average_erosion = accumulated_erosion_sum / (len(annual_data) - 1)
         print(f"Total Accumulated Erosion: {accumulated_erosion_sum} km2/year")
         print(f"Average Accumulated Erosion: {average_erosion} km2/year")
-        plt.figure(figsize=(10, 5))
+        aspect_ratio = annual_data[0].mask.shape[1] / annual_data[0].mask.shape[0]
+        plt.figure(figsize=(10*aspect_ratio, 10))
         plt.plot(years[1:], erosion_data, marker='o', linestyle='-', color='red', label='Yearly Erosion (km2)')
         plt.plot(years[1:], accumulated_erosion_data, marker='o', linestyle='-', color='blue', label='Accumulated Erosion (km2)')
         plt.title('Annual and Accumulated Erosion Over Time')
@@ -410,7 +420,7 @@ class River:
         average_accretion = accumulated_accretion_sum / (len(annual_data) - 1)
         print(f"Total Accumulated Accretion: {accumulated_accretion_sum} km2/year")
         print(f"Average Accumulated Accretion: {average_accretion} km2/year")
-        plt.figure(figsize=(10, 5))
+        plt.figure(figsize=(10*aspect_ratio, 10))
         plt.plot(years[1:], accretion_data, marker='o', linestyle='-', color='red', label='Yearly Accretion (km2)')
         plt.plot(years[1:], accumulated_accretion_data, marker='o', linestyle='-', color='blue', label='Accumulated Accretion (km2)')
         plt.title('Annual and Accumulated Accretion Over Time')
@@ -424,7 +434,7 @@ class River:
         erosion = (annual_data[0].mask.astype(int) < annual_data[-1].mask.astype(int))
         accretion = (annual_data[0].mask.astype(int) > annual_data[-1].mask.astype(int))
         if cls.DEM is not None:
-            fig, ax = plt.subplots(figsize=(40, 30))
+            fig, ax = plt.subplots(figsize=(40* aspect_ratio, 40))
             dem_image = ax.imshow(cls.DEM, cmap='Greys', interpolation='nearest', aspect='auto')
             erosion_image = ax.imshow(erosion, cmap='Reds', alpha=0.6)
             accretion_image = ax.imshow(accretion, cmap='Blues', alpha=0.6)
@@ -450,8 +460,8 @@ class River:
         erosion_data = []
         for i in range(1, len(annual_data)):
             erosion_data.append(annual_data[i].erosion)
-
-        fig, ax1 = plt.subplots(figsize=(10, 5))
+        aspect_ratio = annual_data[0].mask.shape[1] / annual_data[0].mask.shape[0]
+        fig, ax1 = plt.subplots(figsize=(10* aspect_ratio, 10))
         color = 'tab:red'
         ax1.set_xlabel('Year')
         ax1.set_ylabel('Erosion (km2)', color=color)
