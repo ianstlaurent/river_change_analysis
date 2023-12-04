@@ -264,6 +264,8 @@ class River:
         Returns:
             Plotted edges of the river over time.
         """
+        # Sort the annual_data by year
+        annual_data = sorted(annual_data, key=lambda river: river.year)
         years_to_plot = range(0, len(annual_data), 5)
         aspect_ratio = annual_data[0].mask.shape[1] / annual_data[0].mask.shape[0]
         fig, ax = plt.subplots(figsize=(10*aspect_ratio, 10), dpi=500)
