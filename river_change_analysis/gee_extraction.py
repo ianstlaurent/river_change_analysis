@@ -29,10 +29,6 @@ def Ndvi(image):
     """Calculate the Normalized Difference Vegetation Index (NDVI) for an image."""
     return image.normalizedDifference(['Nir', 'Red']).rename('ndvi')
 
-def Lswi(image):
-    """Calculate the Land Surface Water Index (LSWI) for an image."""
-    return image.normalizedDifference(['Nir', 'Swir1']).rename('lswi')
-
 def Mndwi(image):
     """Calculate the Modified Normalized Difference Water Index (MNDWI) for an image."""
     return image.normalizedDifference(['Green', 'Swir1']).rename('mndwi')
@@ -51,7 +47,6 @@ def import_dem(roi, file_name_prefix, folder_name):
     dem = ee.Image('USGS/SRTMGL1_003').clip(roi)
     elevation = dem.select('elevation')
     slope = ee.Terrain.slope(elevation)
-
     task = ee.batch.Export.image.toDrive(
             image = dem,
             description = file_name_prefix + '_dem',
@@ -65,6 +60,18 @@ def import_dem(roi, file_name_prefix, folder_name):
     task.start()
 
     task1 = ee.batch.Export.image.toDrive(
+            image = elevation,
+            description = file_name_prefix + '_elevation',
+            fileNamePrefix = file_name_prefix + '_elevation',
+            region = roi.getInfo()['coordinates'],
+            scale = 30,
+            fileFormat = 'GeoTIFF',
+            folder = folder_name,
+            maxPixels = 1e12
+    )
+    task1.start()
+
+    task2 = ee.batch.Export.image.toDrive(
             image = slope,
             description = file_name_prefix + '_slope',
             fileNamePrefix = file_name_prefix + '_slope',
@@ -74,7 +81,7 @@ def import_dem(roi, file_name_prefix, folder_name):
             folder = folder_name,
             maxPixels = 1e12
     )
-    task1.start()
+    task2.start()
 
 def process_images(start_year, end_year, month_day_start, month_day_end, roi, folder_name, file_name):
 
@@ -95,16 +102,18 @@ def process_images(start_year, end_year, month_day_start, month_day_end, roi, fo
     cleaning_pixels = 100
 
     # Band names for different Landsat sensors
-    bn8 = ['B1', 'B2', 'B3', 'B4', 'B6', 'pixel_qa', 'B5', 'B7']
-    bn7 = ['B1', 'B1', 'B2', 'B3', 'B5', 'pixel_qa', 'B4', 'B7']
-    bn5 = ['B1', 'B1', 'B2', 'B3', 'B5', 'pixel_qa', 'B4', 'B7']
+    bn9 = ['SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B6', 'QA_PIXEL', 'SR_B5', 'SR_B7']
+    bn8 = ['SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B6', 'QA_PIXEL', 'SR_B5', 'SR_B7']
+    bn7 = ['SR_B1', 'SR_B1', 'SR_B2', 'SR_B3', 'SR_B5', 'QA_PIXEL', 'SR_B4', 'SR_B7']
+    bn5 = ['SR_B1', 'SR_B1', 'SR_B2', 'SR_B3', 'SR_B5', 'QA_PIXEL', 'SR_B4', 'SR_B7']
     bns = ['uBlue', 'Blue', 'Green', 'Red', 'Swir1', 'BQA', 'Nir', 'Swir2']
 
     # Image collections for different Landsat sensors
-    ls5 = ee.ImageCollection("LANDSAT/LT05/C01/T1_SR").filterDate('1985-04-01', '1999-04-15').select(bn5, bns)
-    ls7 = ee.ImageCollection("LANDSAT/LE07/C01/T1_SR").select(bn7, bns)
-    ls8 = ee.ImageCollection("LANDSAT/LC08/C01/T1_SR").select(bn8, bns)
-    merged = ls5.merge(ls7).merge(ls8)  # Merge all collections into one
+    ls5 = ee.ImageCollection("LANDSAT/LT05/C02/T1_L2").filterDate('1985-04-01', '1999-04-15').select(bn5, bns)
+    ls7 = ee.ImageCollection("LANDSAT/LE07/C02/T1_L2").select(bn7, bns)
+    ls8 = ee.ImageCollection("LANDSAT/LC08/C02/T1_L2").select(bn8, bns)
+    ls9 = ee.ImageCollection("LANDSAT/LC09/C02/T1_L2").select(bn9, bns)
+    merged = ls5.merge(ls7).merge(ls8).merge(ls9)  # Merge all collections into one
 
     for year in range(start_year, end_year+1):
         sDate_T1 = str(year) + month_day_start  # Start date for filtering
@@ -129,15 +138,12 @@ def process_images(start_year, end_year, month_day_start, month_day_end, roi, fo
         mndwi_p50 = Mndwi(p50)
         ndvi_p50 = Ndvi(p50)
         evi_p50 = Evi(p50)
-        lswi_p50 = Lswi(p50)
 
         # Water classification from (Zou 2018):
         water_p50 = mndwi_p50.gt(ndvi_p50).Or(mndwi_p50.gt(evi_p50)).And(evi_p50.lt(0.1))
-        waterMasked_p50 = water_p50.updateMask(water_p50.gt(0))
 
         # Active river belt classification:
         activebelt_p50 = mndwi_p50.gte(mndwi_param).And(ndvi_p50.lte(ndvi_param))
-        activebeltMasked_p50 = activebelt_p50.updateMask(activebelt_p50.gt(0))
         active_p50 = water_p50.Or(activebelt_p50)
 
         # Clean binary active channel:
