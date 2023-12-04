@@ -265,7 +265,7 @@ class River:
         """
         years_to_plot = range(0, len(annual_data), 5)
         aspect_ratio = annual_data[0].mask.shape[1] / annual_data[0].mask.shape[0]
-        fig, ax = plt.subplots(figsize=(10*aspect_ratio, 10))
+        fig, ax = plt.subplots(figsize=(10*aspect_ratio, 10), dpi=500)
         colors = plt.cm.Spectral(np.linspace(0, 1, len(years_to_plot)))
 
         # Plot each year's river edges
@@ -276,7 +276,7 @@ class River:
 
         ax.set_ylim(ax.get_ylim()[::-1])
         ax.set_title('River Edge Evolution Over 30 Years')
-        ax.legend(loc='best', fontsize='x-small')
+        ax.legend(loc='best')
         ax.set_xlabel('X Coordinate')
         ax.set_ylabel('Y Coordinate')
         ax.set_aspect('equal')
@@ -405,8 +405,7 @@ class River:
         average_erosion = accumulated_erosion_sum / (len(annual_data) - 1)
         print(f"Total Accumulated Erosion: {accumulated_erosion_sum} km2/year")
         print(f"Average Accumulated Erosion: {average_erosion} km2/year")
-        aspect_ratio = annual_data[0].mask.shape[1] / annual_data[0].mask.shape[0]
-        plt.figure(figsize=(10*aspect_ratio, 10))
+        plt.figure(figsize=(10, 10))
         plt.plot(years[1:], erosion_data, marker='o', linestyle='-', color='red', label='Yearly Erosion (km2)')
         plt.plot(years[1:], accumulated_erosion_data, marker='o', linestyle='-', color='blue', label='Accumulated Erosion (km2)')
         plt.title('Annual and Accumulated Erosion Over Time')
@@ -420,7 +419,7 @@ class River:
         average_accretion = accumulated_accretion_sum / (len(annual_data) - 1)
         print(f"Total Accumulated Accretion: {accumulated_accretion_sum} km2/year")
         print(f"Average Accumulated Accretion: {average_accretion} km2/year")
-        plt.figure(figsize=(10*aspect_ratio, 10))
+        plt.figure(figsize=(10, 10))
         plt.plot(years[1:], accretion_data, marker='o', linestyle='-', color='red', label='Yearly Accretion (km2)')
         plt.plot(years[1:], accumulated_accretion_data, marker='o', linestyle='-', color='blue', label='Accumulated Accretion (km2)')
         plt.title('Annual and Accumulated Accretion Over Time')
@@ -434,6 +433,7 @@ class River:
         erosion = (annual_data[0].mask.astype(int) < annual_data[-1].mask.astype(int))
         accretion = (annual_data[0].mask.astype(int) > annual_data[-1].mask.astype(int))
         if cls.DEM is not None:
+            aspect_ratio = annual_data[0].mask.shape[1] / annual_data[0].mask.shape[0]
             fig, ax = plt.subplots(figsize=(40* aspect_ratio, 40))
             dem_image = ax.imshow(cls.DEM, cmap='Greys', interpolation='nearest', aspect='auto')
             erosion_image = ax.imshow(erosion, cmap='Reds', alpha=0.6)
