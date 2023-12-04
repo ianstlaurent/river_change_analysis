@@ -348,8 +348,7 @@ class River:
             folder_file_path = folder_file_path + 'river_centerline_evolution.mp4'
         anim.save(folder_file_path, writer='ffmpeg')
 
-    @classmethod
-    def quantify_erosion(cls, annual_data):
+    def quantify_erosion(annual_data):
         """
         Quantify the erosion of the river.
         Args:
@@ -366,21 +365,8 @@ class River:
             annual_data[i].erosion = np.sum(erosion * (30**2)) / 1000000
             annual_data[i].accretion = np.sum(accretion * (30**2)) / 1000000
 
-            # Calculate the volume of erosion and accretion
-            if cls.DEM is not None:
-                erosion_elevation = cls.DEM[erosion]
-                accretion_elevation = cls.DEM[accretion]
-                plt.figure(figsize=(10, 5))
-                plt.scatter(range(len(erosion_elevation)), erosion_elevation, color='r', label='Erosion')
-                plt.scatter(range(len(accretion_elevation)), accretion_elevation, color='b', label='Accretion')
-                plt.title('Elevation at Locations of Erosion and Accretion')
-                plt.xlabel('Location')
-                plt.ylabel('Elevation')
-                plt.legend()
-                plt.show()
-
-
-    def plot_erosion(annual_data):
+    @classmethod
+    def plot_erosion(cls, annual_data):
         """
         Plot erosion over time and accumulated erosion over time.
         Args:
@@ -433,3 +419,15 @@ class River:
         plt.grid(True)
         plt.legend()
         plt.show()
+
+        # Plot the erosion/accretion on dem
+        erosion = (annual_data[0].mask.astype(int) > annual_data[-1].mask.astype(int))
+        accretion = (annual_data[0].mask.astype(int) < annual_data[-1].mask.astype(int))
+        if cls.DEM is not None:
+            plt.figure(figsize=(10, 5))
+            plt.imshow(cls.DEM, cmap='terrain', interpolation='nearest', aspect='auto')
+            plt.imshow(erosion, cmap='Reds', alpha=0.3)
+            plt.imshow(accretion, cmap='Blues', alpha=0.3)
+            plt.title('Elevation with Erosion Areas')
+            plt.colorbar(label='Elevation')
+            plt.show()
