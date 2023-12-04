@@ -424,10 +424,10 @@ class River:
         erosion = (annual_data[0].mask.astype(int) > annual_data[-1].mask.astype(int))
         accretion = (annual_data[0].mask.astype(int) < annual_data[-1].mask.astype(int))
         if cls.DEM is not None:
-            plt.figure(figsize=(10, 5))
-            plt.imshow(cls.DEM, cmap='terrain', interpolation='nearest', aspect='auto')
-            plt.imshow(erosion, cmap='Reds', alpha=0.3)
-            plt.imshow(accretion, cmap='Blues', alpha=0.3)
+            plt.figure(figsize=(30, 20))
+            dem_image = plt.imshow(cls.DEM, cmap='terrain', interpolation='nearest', aspect='auto')  # Capture the image object
+            plt.imshow(erosion, cmap='Reds', alpha=0.5)
+            plt.imshow(accretion, cmap='Blues', alpha=0.5)
             plt.title('Elevation with Erosion Areas')
-            plt.colorbar(label='Elevation')
+            plt.colorbar(dem_image, label='Elevation')
             plt.show()
