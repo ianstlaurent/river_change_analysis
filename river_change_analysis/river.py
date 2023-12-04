@@ -208,8 +208,7 @@ class River:
         Returns:
             Plotted centerline of the river over time.
         """
-        aspect_ratio = annual_data[0].mask.shape[1] / annual_data[0].mask.shape[0]
-        fig, ax = plt.subplots(figsize=(10*aspect_ratio, 10), dpi=500)
+        fig, ax = plt.subplots(figsize=(30, 20), dpi=500)
         ax.set_facecolor('black')
         years_to_plot = range(0, len(annual_data), 5)
         colors = plt.cm.Spectral(np.linspace(0, 1, len(years_to_plot)))
@@ -267,8 +266,7 @@ class River:
         # Sort the annual_data by year
         annual_data = sorted(annual_data, key=lambda river: river.year)
         years_to_plot = range(0, len(annual_data), 5)
-        aspect_ratio = annual_data[0].mask.shape[1] / annual_data[0].mask.shape[0]
-        fig, ax = plt.subplots(figsize=(10*aspect_ratio, 10), dpi=500)
+        fig, ax = plt.subplots(figsize=(20, 15))
         colors = plt.cm.Spectral(np.linspace(0, 1, len(years_to_plot)))
 
         # Plot each year's river edges
@@ -278,7 +276,7 @@ class River:
             river_mask._plot_edges(ax, edges, colors[i], 0.6, str(river_mask.year))
 
         ax.set_ylim(ax.get_ylim()[::-1])
-        ax.set_title('River Edge Evolution Over 30 Years')
+        ax.set_title('River Edge Evolution')
         ax.legend(loc='best')
         ax.set_xlabel('X Coordinate')
         ax.set_ylabel('Y Coordinate')
@@ -298,14 +296,14 @@ class River:
         fig, ax = plt.subplots(figsize=(10*aspect_ratio, 10))
         # Plot the mask with a colormap that represents water
         ax.imshow(self.mask, cmap='Blues', interpolation='none', alpha=0.7)
-        plt.title('Athabasca River Mask' + str(self.year))
+        plt.title('Athabasca River Mask ' + str(self.year))
         plt.show()
         if self.watermask is None:
             self.water_mask_process(WATER_MASK_MIN_SIZE)
-        fig, ax = plt.subplots(figsize=(12, 8))
+        fig, ax = plt.subplots(10*aspect_ratio, 10)
         # Plot the mask with a colormap that represents water
         ax.imshow(self.watermask, cmap='Blues', interpolation='none', alpha=0.7)
-        plt.title('Athabasca Filled River Mask' + str(self.year))
+        plt.title('Athabasca Filled River Mask ' + str(self.year))
         plt.show()
 
     def plot_river_migration(self, other):
@@ -343,9 +341,8 @@ class River:
         Returns:
             Animated centerline migration over time.
         '''
-        aspect_ratio = annual_data[0].mask.shape[1] / annual_data[0].mask.shape[0]
-        fig, ax = plt.subplots(figsize=(20*aspect_ratio, 20))
-        ax.set_title('Athabasca River (Reach 1) Centerline Migration 1986-2021')
+        fig, ax = plt.subplots(figsize=(30, 50))
+        ax.set_title('Centerline Migration Animation')
         im = ax.imshow(annual_data[0].centerline, cmap='gray')
         def init():
             return [im]
@@ -437,7 +434,7 @@ class River:
         accretion = (annual_data[0].mask.astype(int) > annual_data[-1].mask.astype(int))
         if cls.DEM is not None:
             aspect_ratio = annual_data[0].mask.shape[1] / annual_data[0].mask.shape[0]
-            fig, ax = plt.subplots(figsize=(40* aspect_ratio, 40))
+            fig, ax = plt.subplots(figsize=(30, 20), dpi=500)
             dem_image = ax.imshow(cls.DEM, cmap='Greys', interpolation='nearest', aspect='auto')
             erosion_image = ax.imshow(erosion, cmap='Reds', alpha=0.6)
             accretion_image = ax.imshow(accretion, cmap='Blues', alpha=0.6)
@@ -446,7 +443,6 @@ class River:
             cax_dem = divider.append_axes("right", size="5%", pad=0.05)
             cax_erosion = divider.append_axes("right", size="5%", pad=0.15)
             cax_accretion = divider.append_axes("right", size="5%", pad=0.25)
-
             fig.colorbar(dem_image, cax=cax_dem, label='Elevation')
             fig.colorbar(erosion_image, cax=cax_erosion, label='Erosion')
             fig.colorbar(accretion_image, cax=cax_accretion, label='Accretion')
