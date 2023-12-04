@@ -45,18 +45,16 @@ class River:
             self.mask = dataset.read(1)
             self.year = self.file_path[-8:-4]
 
-    def load_dem(self, dem_files):
+    def load_dem(dem_files):
         """
         Process the dem geotiff file and store the dem and slope
         Args:
-            self (River): A River object.
             dem_files (list): A list of dem files.
         Returns:
             None. Modifies the dem and slope.
         """
         if dem_files is None:
             print("No files provided")
-
         for file in dem_files:
             if (file.contains('slope')):
                 slope = file
@@ -81,6 +79,10 @@ class River:
         Returns:
             Plotted dem and slope.
         """
+        if DEM is None:
+            print("No DEM")
+        if SLOPE is None:
+            print("No Slope")
         # Plot DEM
         plt.figure(figsize=(10, 10))
         img = plt.imshow(DEM, cmap='terrain', interpolation='nearest', aspect='auto')
