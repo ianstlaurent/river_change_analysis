@@ -208,7 +208,7 @@ class River:
             Plotted centerline of the river over time.
         """
         aspect_ratio = annual_data[0].mask.shape[1] / annual_data[0].mask.shape[0]
-        fig, ax = plt.subplots(figsize=(20*aspect_ratio, 20), dpi=500)
+        fig, ax = plt.subplots(figsize=(10*aspect_ratio, 10), dpi=500)
         ax.set_facecolor('black')
         years_to_plot = range(0, len(annual_data), 5)
         colors = plt.cm.Spectral(np.linspace(0, 1, len(years_to_plot)))
@@ -265,7 +265,7 @@ class River:
         """
         years_to_plot = range(0, len(annual_data), 5)
         aspect_ratio = annual_data[0].mask.shape[1] / annual_data[0].mask.shape[0]
-        fig, ax = plt.subplots(figsize=(20*aspect_ratio, 20), dpi=500)
+        fig, ax = plt.subplots(figsize=(10*aspect_ratio, 10))
         colors = plt.cm.Spectral(np.linspace(0, 1, len(years_to_plot)))
 
         # Plot each year's river edges
@@ -292,7 +292,7 @@ class River:
         """
         # Plot the mask
         aspect_ratio = self.mask.shape[1] / self.mask.shape[0]
-        fig, ax = plt.subplots(figsize=(20*aspect_ratio, 20), dpi=500)
+        fig, ax = plt.subplots(figsize=(10*aspect_ratio, 10))
         # Plot the mask with a colormap that represents water
         ax.imshow(self.mask, cmap='Blues', interpolation='none', alpha=0.7)
         plt.title('Athabasca River Mask' + str(self.year))
@@ -320,7 +320,7 @@ class River:
         # Positive values (areas that are only in the current year's mask) in red
         # Negative values (areas that are only in the other year's mask) in blue
         aspect_ratio = self.mask.shape[1] / self.mask.shape[0]
-        fig, ax = plt.subplots(figsize=(20*aspect_ratio, 20), dpi=500)
+        fig, ax = plt.subplots(figsize=(10*aspect_ratio, 10))
         cmap = plt.get_cmap('bwr')
         im = ax.imshow(migration, cmap=cmap, vmin=-1, vmax=1)
         # Create an axes for colorbar.
@@ -341,7 +341,7 @@ class River:
             Animated centerline migration over time.
         '''
         aspect_ratio = annual_data[0].mask.shape[1] / annual_data[0].mask.shape[0]
-        fig, ax = plt.subplots(figsize=(50*aspect_ratio, 50))
+        fig, ax = plt.subplots(figsize=(20*aspect_ratio, 20))
         ax.set_title('Athabasca River (Reach 1) Centerline Migration 1986-2021')
         im = ax.imshow(annual_data[0].centerline, cmap='gray')
         def init():
