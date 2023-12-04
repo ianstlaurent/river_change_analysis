@@ -15,10 +15,10 @@ from matplotlib.animation import FuncAnimation
 
 MAX_DISTANCE_BRANCH_REMOVAL = 100
 WATER_MASK_MIN_SIZE = 1000
-DEM = None
-SLOPE = None
 
 class River:
+    DEM = None
+    SLOPE = None
     def __init__(self, mask_file_path):
         """
         Initialize a River object.
@@ -45,7 +45,8 @@ class River:
             self.mask = dataset.read(1)
             self.year = self.file_path[-8:-4]
 
-    def load_dem(dem_files):
+    @classmethod
+    def load_dem(cls, dem_files):
         """
         Process the dem geotiff file and store the dem and slope
         Args:
@@ -68,10 +69,11 @@ class River:
                 DEM  = src.read(1)
         # Cut out the non-river areas
         mask = DEM != 0
-        DEM = np.where(mask, DEM, np.nan)
-        SLOPE = np.where(mask, SLOPE, np.nan)
+        cls.DEM = np.where(mask, DEM, np.nan)
+        cls.SLOPE = np.where(mask, SLOPE, np.nan)
 
-    def plot_dem():
+    @classmethod
+    def plot_dem(cls):
         """
         Plot the dem and slope.
         Args:
@@ -79,20 +81,20 @@ class River:
         Returns:
             Plotted dem and slope.
         """
-        if DEM is None:
+        if cls.DEM is None:
             print("No DEM")
-        if SLOPE is None:
+        if cls.SLOPE is None:
             print("No Slope")
         # Plot DEM
         plt.figure(figsize=(10, 10))
-        img = plt.imshow(DEM, cmap='terrain', interpolation='nearest', aspect='auto')
+        img = plt.imshow(cls.DEM, cmap='terrain', interpolation='nearest', aspect='auto')
         plt.colorbar(img, label='Elevation (meters)')
         plt.title('SRTM 30m DEM')
         plt.show()
 
         # Plot Slope
         plt.figure(figsize=(10, 10))
-        img = plt.imshow(SLOPE, cmap='terrain', interpolation='nearest', aspect='auto')
+        img = plt.imshow(cls.SLOPE, cmap='terrain', interpolation='nearest', aspect='auto')
         plt.colorbar(img, label='Slope (Degrees)')
         plt.title('SRTM 30m Slope')
         plt.show()
