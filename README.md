@@ -11,14 +11,14 @@ Google Colab Installation:
 
 ```python
 # Install the 'river_change_analysis' package directly from the Git repository.
-!pip install 
+!pip install git+https://@github.com/ianstlaurent/river_change_analysis.git
 ```
 
 Python Installation:
 
 # Install the 'river_change_analysis' package directly from the Git repository.
 ```python
-pip3 install 
+pip3 install git+https://@github.com/ianstlaurent/river_change_analysis.git
 ```
 
 # Install Google Authentication Library to connect to GEE API
