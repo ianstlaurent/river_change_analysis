@@ -155,6 +155,7 @@ rca.River.water_mask_process(annual_data, water_mask_min_size)
 
 # Create Centerlines for each River object
 # Specify the max branch removal for each centerline, the higher the number the more points removed from the centerline (100 is recommended)
+# This make take a couple of minutes depending on the number of binary masks
 max_distance_branch_removal = 100
 rca.River.process_centerline(annual_data, max_distance_branch_removal)
 ```
