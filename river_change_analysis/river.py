@@ -421,8 +421,8 @@ class River:
         plt.show()
 
         # Plot the erosion/accretion on dem
-        erosion = (annual_data[0].mask.astype(int) > annual_data[-1].mask.astype(int))
-        accretion = (annual_data[0].mask.astype(int) < annual_data[-1].mask.astype(int))
+        erosion = (annual_data[0].mask.astype(int) < annual_data[-1].mask.astype(int))
+        accretion = (annual_data[0].mask.astype(int) > annual_data[-1].mask.astype(int))
         if cls.DEM is not None:
             fig, ax = plt.subplots(figsize=(40, 30))
             dem_image = ax.imshow(cls.DEM, cmap='Greys', interpolation='nearest', aspect='auto')
