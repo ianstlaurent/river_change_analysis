@@ -348,7 +348,8 @@ class River:
             folder_file_path = folder_file_path + 'river_centerline_evolution.mp4'
         anim.save(folder_file_path, writer='ffmpeg')
 
-    def quantify_erosion(annual_data):
+    @classmethod
+    def quantify_erosion(cls, annual_data):
         """
         Quantify the erosion of the river.
         Args:
@@ -366,9 +367,9 @@ class River:
             annual_data[i].accretion = np.sum(accretion * (30**2)) / 1000000
 
             # Calculate the volume of erosion and accretion
-            if DEM is not None:
-                erosion_elevation = DEM[erosion]
-                accretion_elevation = DEM[accretion]
+            if cls.DEM is not None:
+                erosion_elevation = cls.DEM[erosion]
+                accretion_elevation = cls.DEM[accretion]
                 plt.figure(figsize=(10, 5))
                 plt.scatter(range(len(erosion_elevation)), erosion_elevation, color='r', label='Erosion')
                 plt.scatter(range(len(accretion_elevation)), accretion_elevation, color='b', label='Accretion')
@@ -432,5 +433,3 @@ class River:
         plt.grid(True)
         plt.legend()
         plt.show()
-
-

@@ -108,37 +108,22 @@ rivers_files = rca.mask_import(binary_mask_folder_path, binary_mask_file_pattern
 
 ### Import 30m DEM
 
-Import 30m DEM, elevation and slope geotiffs cropped to the ROI.
+Import 30m DEM and slope geotiffs cropped to the ROI.
 
 ```python
 # Choose DEM file name pattern
 dem_file_pattern = "Athabasca"
 # Choose folder in Google Drive
 dem_folder = "CSC_497"
-# Extract from GEE DEM, Elevation, and slope GeoTiffs
+# Extract from GEE DEM and slope GeoTiffs
 rca.gee_extraction.import_dem(region,dem_file_pattern,folder_path)
 
 # Grab the DEM, Elevation, and slope GeoTiffs from the Google Drive
 dem_folder_path = "/content/drive/MyDrive/CSC_497"
 dem_files = rca.mask_import(dem_folder_path, dem_file_pattern)
 
-# Check which file is which
-print(dem_files)
-
-# Assign variables to the file paths
-dem = dem_files[2]
-elevation = dem_files[1]
-slope = dem_files[0]
-
-with rasterio.open(elevation) as src:
-  elevation_data = src.read(1)
-
-with rasterio.open(slope) as src:
-  slope_data = src.read(1)
-
-with rasterio.open(dem) as src:
-  dem_data = src.read(1)
-
+# Load files into River Class
+rca.River.load_dem(dem_files)
 ```
 
 ### Create River Binary Mask Objects
@@ -196,6 +181,9 @@ rca.River.animate_centerline_migration(annual_data,folder_path_anim)
 
 #Plot the river edges over time
 rca.River.plot_river_edges(annual_data)
+
+#Plot DEM and Slope
+rca.River.plot_dem()
 ```
 
 
