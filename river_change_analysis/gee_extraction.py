@@ -1,4 +1,5 @@
-# GEE River Binary Mask and DEM Extraction
+# GEE River Binary Mask Extraction
+
 import ee
 
 CLOUD_SHADOW_BIT_MASK = 1 << 3
@@ -79,6 +80,7 @@ def import_dem(roi, file_name_prefix, folder_name):
     )
     task2.start()
 
+
 def process_images(start_year, end_year, month_day_start, month_day_end, roi, folder_name, file_name):
 
     if (start_year == None) | (end_year == None):
@@ -91,31 +93,26 @@ def process_images(start_year, end_year, month_day_start, month_day_end, roi, fo
         raise ValueError("Please provide a folder name.")
     if file_name == None:
         raise ValueError("Please provide a file name.")
-
-
-    ## Modified from:
+    # Modified from:
     # Boothroyd, RJ, Williams, RD, Hoey, TB, Barrett, B, Prasojo, OA. Applications of Google Earth Engine
     # in fluvial geomorphology for detecting river channel change. WIREs Water.
     # 2021; 8:e21496. https://doi.org/10.1002/wat2.1496
-
     # Parameters for water and active river belt classification
     mndwi_param = -0.40
     ndvi_param = 0.20
     cleaning_pixels = 100
 
     # Band names for different Landsat sensors
-    bn9 = ['SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B6', 'QA_PIXEL', 'SR_B5', 'SR_B7']
-    bn8 = ['SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B6', 'QA_PIXEL', 'SR_B5', 'SR_B7']
-    bn7 = ['SR_B1', 'SR_B1', 'SR_B2', 'SR_B3', 'SR_B5', 'QA_PIXEL', 'SR_B4', 'SR_B7']
-    bn5 = ['SR_B1', 'SR_B1', 'SR_B2', 'SR_B3', 'SR_B5', 'QA_PIXEL', 'SR_B4', 'SR_B7']
+    bn8 = ['B1', 'B2', 'B3', 'B4', 'B6', 'pixel_qa', 'B5', 'B7']
+    bn7 = ['B1', 'B1', 'B2', 'B3', 'B5', 'pixel_qa', 'B4', 'B7']
+    bn5 = ['B1', 'B1', 'B2', 'B3', 'B5', 'pixel_qa', 'B4', 'B7']
     bns = ['uBlue', 'Blue', 'Green', 'Red', 'Swir1', 'BQA', 'Nir', 'Swir2']
 
     # Image collections for different Landsat sensors
-    ls5 = ee.ImageCollection("LANDSAT/LT05/C02/T1_L2").filterDate('1985-04-01', '1999-04-15').select(bn5, bns)
-    ls7 = ee.ImageCollection("LANDSAT/LE07/C02/T1_L2").select(bn7, bns)
-    ls8 = ee.ImageCollection("LANDSAT/LC08/C02/T1_L2").select(bn8, bns)
-    ls9 = ee.ImageCollection("LANDSAT/LC09/C02/T1_L2").select(bn9, bns)
-    merged = ls5.merge(ls7).merge(ls8).merge(ls9)  # Merge all collections into one
+    ls5 = ee.ImageCollection("LANDSAT/LT05/C01/T1_SR").filterDate('1985-04-01', '1999-04-15').select(bn5, bns)
+    ls7 = ee.ImageCollection("LANDSAT/LE07/C01/T1_SR").select(bn7, bns)
+    ls8 = ee.ImageCollection("LANDSAT/LC08/C01/T1_SR").select(bn8, bns)
+    merged = ls5.merge(ls7).merge(ls8)  # Merge all collections into one
 
     for year in range(start_year, end_year+1):
         sDate_T1 = str(year) + month_day_start  # Start date for filtering
@@ -143,9 +140,11 @@ def process_images(start_year, end_year, month_day_start, month_day_end, roi, fo
 
         # Water classification from (Zou 2018):
         water_p50 = mndwi_p50.gt(ndvi_p50).Or(mndwi_p50.gt(evi_p50)).And(evi_p50.lt(0.1))
+        waterMasked_p50 = water_p50.updateMask(water_p50.gt(0))
 
         # Active river belt classification:
         activebelt_p50 = mndwi_p50.gte(mndwi_param).And(ndvi_p50.lte(ndvi_param))
+        activebeltMasked_p50 = activebelt_p50.updateMask(activebelt_p50.gt(0))
         active_p50 = water_p50.Or(activebelt_p50)
 
         # Clean binary active channel:
