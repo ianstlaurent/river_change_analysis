@@ -22,8 +22,6 @@ def download_files_from_drive(secret_path, FilePattern, OutputDir):
         OutputDir = input("Enter output directory: ")
         OutputDir= '/Users/ian/Desktop/School/Fall 2023/CSC 497/Python_Library/River_Analysis/binary_river_masks/'
 
-    # Example Path Json file
-
     # Run the OAuth 2.0 flow to get an access token
     flow = InstalledAppFlow.from_client_secrets_file(secret_path, SCOPES)
     creds = flow.run_local_server(port=0)
