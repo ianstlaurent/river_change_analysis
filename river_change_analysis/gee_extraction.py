@@ -1,5 +1,5 @@
 # GEE River Binary Mask and DEM Extraction
-# Modified Javascript from:
+# Modified from:
 # Boothroyd, RJ, Williams, RD, Hoey, TB, Barrett, B, Prasojo, OA. Applications of Google Earth Engine
 # in fluvial geomorphology for detecting river channel change. WIREs Water.
 # 2021; 8:e21496. https://doi.org/10.1002/wat2.1496
