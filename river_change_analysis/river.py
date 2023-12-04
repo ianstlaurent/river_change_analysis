@@ -341,7 +341,8 @@ class River:
         Returns:
             Animated centerline migration over time.
         '''
-        fig, ax = plt.subplots(figsize=(30, 50), dpi=500)
+        fig, ax = plt.subplots()
+        plt.get_current_fig_manager().window.showMaximized()
         ax.set_title('Centerline Migration Animation')
         im = ax.imshow(annual_data[0].centerline, cmap='gray')
         def init():
@@ -349,7 +350,6 @@ class River:
         def animate(i):
             im.set_data(annual_data[i].centerline)
             return [im]
-        # Create the animation
         anim = FuncAnimation(fig, animate, init_func=init, frames=len(annual_data), interval=1000)
         plt.show()
         if folder_file_path is None:
@@ -433,7 +433,6 @@ class River:
         erosion = (annual_data[0].mask.astype(int) < annual_data[-1].mask.astype(int))
         accretion = (annual_data[0].mask.astype(int) > annual_data[-1].mask.astype(int))
         if cls.DEM is not None:
-            aspect_ratio = annual_data[0].mask.shape[1] / annual_data[0].mask.shape[0]
             fig, ax = plt.subplots(figsize=(30, 20), dpi=500)
             dem_image = ax.imshow(cls.DEM, cmap='Greys', interpolation='nearest', aspect='auto')
             erosion_image = ax.imshow(erosion, cmap='Reds', alpha=0.6)
@@ -446,7 +445,6 @@ class River:
             fig.colorbar(dem_image, cax=cax_dem, label='Elevation')
             fig.colorbar(erosion_image, cax=cax_erosion, label='Erosion')
             fig.colorbar(accretion_image, cax=cax_accretion, label='Accretion')
-
             plt.show()
 
     def plot_discharge_erosion(annual_data, discharge):
