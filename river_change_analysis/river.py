@@ -425,26 +425,12 @@ class River:
         accretion = (annual_data[0].mask.astype(int) < annual_data[-1].mask.astype(int))
         if cls.DEM is not None:
             fig, ax = plt.subplots(figsize=(30, 20))
-
-            # Adjusted the color map for DEM to one that might contrast better
             dem_image = ax.imshow(cls.DEM, cmap='viridis', interpolation='nearest', aspect='auto')
-
-            # Apply a more transparent overlay for erosion and accretion
-            erosion_image = ax.imshow(erosion, cmap='Reds', alpha=0.6)  # Adjusted alpha for visibility
-            accretion_image = ax.imshow(accretion, cmap='Blues', alpha=0.6)  # Adjusted alpha for visibility
-
-            # Add contour lines for elevation
+            erosion_image = ax.imshow(erosion, cmap='Reds', alpha=0.6)
+            accretion_image = ax.imshow(accretion, cmap='Blues', alpha=0.6)
             ax.contour(cls.DEM, cmap='gray', alpha=0.5)
-
             ax.set_title('River Elevation with Erosion and Accretion Areas')
-
-            # Create colorbar for DEM
             fig.colorbar(dem_image, ax=ax, label='Elevation', pad=0)
-
-            # Create a new axes for the colorbar on the right
             cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
-
-            # Create colorbar for erosion/accretion
             fig.colorbar(accretion_image, cax=cbar_ax, label='Erosion/Accretion')
-
             plt.show()
