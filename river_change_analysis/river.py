@@ -56,9 +56,9 @@ class River:
         if dem_files is None:
             print("No files provided")
         for file in dem_files:
-            if (file.contains('slope')):
+            if 'slope' in file or 'SLOPE' in file or 'Slope' in file:
                 slope = file
-            elif (file.contains('dem')):
+            elif 'dem' in file or 'Dem' in file or 'DEM' in file:
                 dem = file
         if slope is not None:
             with rasterio.open(slope) as src:
