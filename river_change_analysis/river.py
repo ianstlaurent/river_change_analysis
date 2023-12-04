@@ -12,6 +12,7 @@ from skimage.morphology import skeletonize, thin, remove_small_objects
 from skimage.filters import sobel, threshold_otsu
 from skimage import measure, morphology
 from matplotlib.animation import FuncAnimation
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 MAX_DISTANCE_BRANCH_REMOVAL = 100
 WATER_MASK_MIN_SIZE = 1000
@@ -439,11 +440,15 @@ class River:
             erosion_image = ax.imshow(erosion, cmap='Reds', alpha=0.6)
             accretion_image = ax.imshow(accretion, cmap='Blues', alpha=0.6)
             ax.set_title('River Elevation with Erosion and Accretion Areas')
-            fig.colorbar(dem_image, ax=ax, label='Elevation', pad=0)
-            cbar_ax_erosion = fig.add_axes([0.85, 0.15, 0.05, 0.7])
-            fig.colorbar(erosion_image, cax=cbar_ax_erosion, label='Erosion')
-            cbar_ax_accretion = fig.add_axes([0.90, 0.15, 0.05, 0.7])
-            fig.colorbar(accretion_image, cax=cbar_ax_accretion, label='Accretion')
+            divider = make_axes_locatable(ax)
+            cax_dem = divider.append_axes("right", size="5%", pad=0.05)
+            cax_erosion = divider.append_axes("right", size="5%", pad=0.15)
+            cax_accretion = divider.append_axes("right", size="5%", pad=0.25)
+
+            fig.colorbar(dem_image, cax=cax_dem, label='Elevation')
+            fig.colorbar(erosion_image, cax=cax_erosion, label='Erosion')
+            fig.colorbar(accretion_image, cax=cax_accretion, label='Accretion')
+
             plt.show()
 
     def plot_discharge_erosion(annual_data, discharge):
@@ -460,8 +465,7 @@ class River:
         erosion_data = []
         for i in range(1, len(annual_data)):
             erosion_data.append(annual_data[i].erosion)
-        aspect_ratio = annual_data[0].mask.shape[1] / annual_data[0].mask.shape[0]
-        fig, ax1 = plt.subplots(figsize=(10* aspect_ratio, 10))
+        fig, ax1 = plt.subplots(figsize=(10, 10))
         color = 'tab:red'
         ax1.set_xlabel('Year')
         ax1.set_ylabel('Erosion (km2)', color=color)
