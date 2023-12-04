@@ -435,3 +435,32 @@ class River:
             cbar_ax_accretion = fig.add_axes([0.90, 0.15, 0.05, 0.7])
             fig.colorbar(accretion_image, cax=cbar_ax_accretion, label='Accretion')
             plt.show()
+
+    def plot_discharge_erosion(annual_data, discharge):
+        """
+        Plot discharge and erosion.
+        Args:
+            discharge (list): A list of discharge values.
+            annual_data (list): A list of River objects representing the river at different points in time.
+        Returns:
+            Plotted discharge and erosion.
+        """
+        # Sort the annual_data list by year
+        annual_data.sort(key=lambda river: int(river.year))
+        erosion_data = []
+        for i in range(1, len(annual_data)):
+            erosion_data.append(annual_data[i].erosion)
+
+        fig, ax1 = plt.subplots(figsize=(10, 5))
+        color = 'tab:red'
+        ax1.set_xlabel('Year')
+        ax1.set_ylabel('Erosion (km2)', color=color)
+        ax1.plot(range(1, len(annual_data)), erosion_data, color=color)
+        ax1.tick_params(axis='y', labelcolor=color)
+        ax2 = ax1.twinx()
+        color = 'tab:blue'
+        ax2.set_ylabel('Discharge (m3/s)', color=color)
+        ax2.plot(range(1, len(annual_data)), discharge[1:], color=color)
+        ax2.tick_params(axis='y', labelcolor=color)
+        fig.tight_layout()
+        plt.show()

@@ -1,8 +1,4 @@
 # GEE River Binary Mask and DEM Extraction
-# Modified from:
-# Boothroyd, RJ, Williams, RD, Hoey, TB, Barrett, B, Prasojo, OA. Applications of Google Earth Engine
-# in fluvial geomorphology for detecting river channel change. WIREs Water.
-# 2021; 8:e21496. https://doi.org/10.1002/wat2.1496
 import ee
 
 CLOUD_SHADOW_BIT_MASK = 1 << 3
@@ -95,6 +91,12 @@ def process_images(start_year, end_year, month_day_start, month_day_end, roi, fo
         raise ValueError("Please provide a folder name.")
     if file_name == None:
         raise ValueError("Please provide a file name.")
+
+
+    ## Modified from:
+    # Boothroyd, RJ, Williams, RD, Hoey, TB, Barrett, B, Prasojo, OA. Applications of Google Earth Engine
+    # in fluvial geomorphology for detecting river channel change. WIREs Water.
+    # 2021; 8:e21496. https://doi.org/10.1002/wat2.1496
 
     # Parameters for water and active river belt classification
     mndwi_param = -0.40
