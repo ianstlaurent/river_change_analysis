@@ -50,6 +50,7 @@ drive.mount('/content/drive')
 The first step after installing the Python package is to import it into Google Colab. This can be done by importing river_change_analysis then to make it easier to call the library in the future you can call it something simple like rca.
 
 ```python
+!pip install git+https://@github.com/ianstlaurent/river_change_analysis.git
 import river_change_analysis as rca
 # This will trigger the authentication flow and will prompt you to sign in to your Google account. You'll need to allow the Earth Engine Python API to access your account, then you'll be given a code to paste into the prompt in Google Colab.
 ```
