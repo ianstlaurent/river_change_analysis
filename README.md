@@ -42,22 +42,22 @@ import rasterio
 # Import the Google Colab drive module
 from google.colab import drive
 
-# Mount your Google Drive. This will make the files in your Google Drive accessible from this Google Colab notebook.You'll be prompted to sign in to your Google account, and you'll need to allow Colab to access your Google Drive.
+# Mount your Google Drive. This will make the files in your Google Drive accessible from this Google Colab notebook. You'll be prompted to sign in to your Google account, and you'll need to allow Colab to access your Google Drive.
 drive.mount('/content/drive')
 ```
 
 ### Import Python Library
 
-The first step after installing the Python package is to import it into Google Colab. This can be done by importing river_change_analysis then to make it easier to call the library in the future you can call it something simple like rca.
+After installing the Python package, the first step is to import it into Google Colab. This can be done by importing river_change_analysis; then, to make it easier to call the library in the future, you can call it something simple like rca.
 
 ```python
 !pip install git+https://@github.com/ianstlaurent/river_change_analysis.git
 import river_change_analysis as rca
-# This will trigger the authentication flow and will prompt you to sign in to your Google account. You'll need to allow the Earth Engine Python API to access your account, then you'll be given a code to paste into the prompt in Google Colab.
+# This will trigger the authentication flow and will prompt you to sign in to your Google account. You'll need to allow the Earth Engine Python API to access your account, giving you a code to paste into the prompt in Google Colab.
 ```
 ### Define Region of Interest
 
-Next step is to define region of interest (ROI) using a list of coordinates for the polygon shape. Then use the define_roi(roi) function to turn the list of coordinates into a earth engine polygon.  If the roi is not an acceptable format or if the roi is empty then a defauly roi will be used for the Lower Athabasca River in the Peace Athabasca Delta.
+The next step is to define a region of interest (ROI) using a list of coordinates for the polygon shape. Then, use the define_roi(roi) function to turn the list of coordinates into an earth engine polygon.  If the roi is not an acceptable format or if the roi is empty, then a default roi will be used for the Lower Athabasca River in the Peace Athabasca Delta.
 
 ```python
 region = rca.define_roi(roi)
@@ -65,7 +65,7 @@ region = rca.define_roi(roi)
 
 ### Process Landsat Imagery
 
-Next, process the images using process_images function. This function requires several arugments:
+Next, process the images using process_images function. This function requires several arguments:
 
 start_year
 end_year
@@ -90,13 +90,13 @@ year_end = 2021
 
 # Process the images for the specified years (e.g. 2000 to 2010) and region.
 # This function creates tasks in the Google Earth Engine (GEE) task manager.
-# You'll need to go to the GEE task manager (https://code.earthengine.google.com/tasks) and accept the tasks to start the processing.
+# You must go to the GEE task manager (https://code.earthengine.google.com/tasks) and accept the tasks to start the processing.
 rca.process_images(year_start, year_end, date_start, date_end, region, folder, file_pattern)
 ```
 
 ### Import Landsat Imagery
 
-The processing of the images may require some time to finish depending on the number of years being processes. Once all the processing tasks are completed, you can import the Python masks by calling the mask_import function.
+The processing of the images may require some time to finish, depending on the number of years being processed. Once all the processing tasks are completed, you can import the Python masks by calling the mask_import function.
 
 ```python
 binary_mask_folder_path = "/content/drive/MyDrive/CSC_497"
@@ -108,12 +108,12 @@ rivers_files = rca.mask_import(binary_mask_folder_path, binary_mask_file_pattern
 
 ### Import 30m DEM
 
-Import 30m DEM and slope geotiffs cropped to the ROI.
+Import 30m DEM and slope Geotiffs cropped to the ROI.
 
 ```python
 # Choose DEM file name pattern
 dem_file_pattern = "Athabasca"
-# Choose folder in Google Drive
+# Choose the folder in Google Drive
 dem_folder = "CSC_497"
 # Extract from GEE DEM and slope GeoTiffs
 rca.gee_extraction.import_dem(region,dem_file_pattern,folder_path)
@@ -154,8 +154,8 @@ water_mask_min_size = 1000
 rca.River.water_mask_process(annual_data, water_mask_min_size)
 
 # Create Centerlines for each River object
-# Specify the max branch removal for each centerline, the higher the number the more points removed from the centerline (100 is recommended)
-# This make take a couple of minutes depending on the number of binary masks
+# Specify the max branch removal for each centerline. The higher the number, the more points are removed from the centerline (100 is recommended)
+# This may take a couple of minutes, depending on the number of binary masks
 max_distance_branch_removal = 100
 rca.River.process_centerline(annual_data, max_distance_branch_removal)
 ```
