@@ -4,7 +4,7 @@ The objective of this Python Package is to allow for a streamlined planform anal
 
 ## 2. Description
 
-This package allows for quick visualization of key river morphological features using Landsat Imagery. In addition, users can quickly obtain a rough estimation of annual and cumulative erosion and accretion of a river section over years or decades. 
+This package allows for quick visualization of key river morphological features using Landsat Imagery. In addition, users can quickly obtain a rough estimation of annual and cumulative erosion/accretion of a river section over a period of years or decades.
 
 ## 3. Installation
 
