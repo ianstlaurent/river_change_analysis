@@ -82,10 +82,10 @@ folder= "CSC_497"
 file_pattern = "Reach_1_"
 
 date_start = '-06-01'
-date_end = '-10-01'
+date_end = '-10-31'
 
-year_start = 2000
-year_end = 2013
+year_start = 1986
+year_end = 2021
 
 # Process the images for the specified years (e.g. 2000 to 2010) and region.
 # This function creates tasks in the Google Earth Engine (GEE) task manager.
