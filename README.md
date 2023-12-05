@@ -1,9 +1,10 @@
 # 1. River Change Analysis
 
-The objective of this Python Package is to allow for a streamlined planform analysis of large rivers using Python. This package utilizes the Google Earth Engine API to extract Landsat imagery over a user-specified region of interest. The code then
+The objective of this Python Package is to allow for a streamlined planform analysis of large rivers using Python. This package utilizes the Google Earth Engine API to extract Landsat imagery over a user-specified region of interest. 
 
 ## 2. Description
 
+This package allows for quick visualization of key river morphological features using Landsat Imagery. In addition, users can quickly obtain a rough estimation of annual and cumulative erosion and accretion of a river section over years or decades. 
 
 ## 3. Installation
 
@@ -169,18 +170,25 @@ rca.River.quantify_erosion(annual_data)
 ### Plot All the Results
 
 ```python
+# Plot any year by itself
+annual_data[0].plot_self()
+
+# Plot the migration between any two years
+annual_data[-1].plot_river_migration(annual_data[0])
+
+# Plot the annual and accumulated erosion/accretion 
 rca.River.plot_erosion(annual_data)
 
 # Plot the centerlines over time
 rca.River.plot_centerline(annual_data)
 
+#Plot the river edges over time
+rca.River.plot_river_edges(annual_data)
+
 # Create an animation of the centerline migration over time
 # Provide a direct path along with filename and .mp4
 folder_path_anim = '/content/drive/MyDrive/CSC_497/river_centerline_evolution.mp4'
 rca.River.animate_centerline_migration(annual_data,folder_path_anim)
-
-#Plot the river edges over time
-rca.River.plot_river_edges(annual_data)
 
 #Plot DEM and Slope
 rca.River.plot_dem()
