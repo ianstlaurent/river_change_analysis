@@ -335,8 +335,7 @@ class River:
         Returns:
             Animated centerline migration over time.
         '''
-        fig, ax = plt.subplots()
-        plt.get_current_fig_manager().window.showMaximized()
+        fig, ax = plt.subplots(figsize=(15, 10))
         ax.set_title('Centerline Migration Animation')
         im = ax.imshow(annual_data[0].centerline, cmap='gray')
         def init():
@@ -344,7 +343,7 @@ class River:
         def animate(i):
             im.set_data(annual_data[i].centerline)
             return [im]
-        anim = FuncAnimation(fig, animate, init_func=init, frames=len(annual_data), interval=1000)
+        anim = FuncAnimation(fig, animate, init_func=init, frames=len(annual_data), interval=600)
         plt.show()
         if folder_file_path is None:
             folder_file_path = os.getcwd()
