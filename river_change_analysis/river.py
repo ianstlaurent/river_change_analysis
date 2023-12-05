@@ -235,7 +235,6 @@ class River:
         Returns:
             np.ndarray: Binary mask of the river edges.
         """
-        # Erode the binary mask to get the edges
         eroded_mask = binary_erosion(self.mask)
         edges = self.mask & ~eroded_mask
         return edges
@@ -293,15 +292,12 @@ class River:
         """
         # Plot the mask
         fig, ax = plt.subplots(figsize=(30, 20), dpi=500)
-        # Plot the mask with a colormap that represents water
         ax.imshow(self.mask, cmap='Blues', interpolation='none', alpha=0.7)
         plt.title('Athabasca River Mask ' + str(self.year))
         plt.show()
         if self.watermask is None:
             self.water_mask_process(WATER_MASK_MIN_SIZE)
-
         fig, ax = plt.subplots(figsize=(30, 20), dpi=500)
-        # Plot the mask with a colormap that represents water
         ax.imshow(self.watermask, cmap='Blues', interpolation='none', alpha=0.7)
         plt.title('Athabasca Filled River Mask ' + str(self.year))
         plt.show()
@@ -324,11 +320,9 @@ class River:
         fig, ax = plt.subplots(figsize=(10*aspect_ratio, 10))
         cmap = plt.get_cmap('bwr')
         im = ax.imshow(migration, cmap=cmap, vmin=-1, vmax=1)
-        # Create an axes for colorbar.
         cax = fig.add_axes([ax.get_position().x1 + 0.01, ax.get_position().y0, 0.02, ax.get_position().height])
         colorbar = plt.colorbar(im, cax=cax)
         colorbar.set_label('Erosion (Red) and Accretion (Blue)', rotation=270, labelpad=15)
-        # Set the title to be in the center
         ax.set_title(f'River Migration: {self.year} Compared to {other.year}', pad=20, ha='center')
         plt.show()
 
