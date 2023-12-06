@@ -116,7 +116,7 @@ dem_file_pattern = "Athabasca"
 # Choose the folder in Google Drive
 dem_folder = "CSC_497"
 # Extract from GEE DEM and slope GeoTiffs
-rca.gee_extraction.import_dem(region,dem_file_pattern,folder_path)
+rca.gee_extraction.import_dem(region,dem_file_pattern,dem_folder)
 
 # Grab the DEM, Elevation, and slope GeoTiffs from the Google Drive
 dem_folder_path = "/content/drive/MyDrive/CSC_497"
@@ -138,7 +138,7 @@ for file in rivers_files:
     # Create a 'river' object for the current file. This object represents a river for a specific year.
     yearly_analysis = rca.River(file)
 
-    # Process the river data for the current year. This includes calculating the river width and identifying areas of erosion and accretion.
+    # Process the river data for the current year.
     yearly_analysis.load_mask()
 
     # Add the analysis results for the current year to the 'annual_data' list.
