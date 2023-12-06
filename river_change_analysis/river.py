@@ -376,7 +376,6 @@ class River:
         Returns:
             Plotted erosion over time and accumulated erosion over time.
         """
-        # Sort the annual_data list by year
         annual_data.sort(key=lambda river: int(river.year))
         erosion_data = []
         accretion_data = []
@@ -444,14 +443,14 @@ class River:
         """
         Plot discharge and erosion.
         Args:
-            discharge (list): A list of discharge values.
+            discharge (list): A list of peak discharge values.
             annual_data (list): A list of River objects representing the river at different points in time.
         Returns:
-            Plotted Peak discharge and erosion.
+            Plot Peak discharge and erosion.
         """
-        # Sort the annual_data list by year
         annual_data.sort(key=lambda river: int(river.year))
         erosion_data = []
+        years = [int(river.year) for river in annual_data]
         for i in range(1, len(annual_data)):
             erosion_data.append(annual_data[i].erosion)
 
@@ -460,13 +459,13 @@ class River:
         color = 'tab:red'
         ax1.set_xlabel('Year')
         ax1.set_ylabel('Erosion (km2)', color=color)
-        ax1.plot(range(1, len(annual_data)), erosion_data, color=color, marker='o', linestyle='-')
+        ax1.plot(years[1:], erosion_data, color=color, marker='o', linestyle='-')
         ax1.tick_params(axis='y', labelcolor=color)
 
         ax2 = ax1.twinx()
         color = 'tab:blue'
         ax2.set_ylabel('Peak Discharge (m3/s)', color=color)
-        ax2.plot(range(1, len(annual_data)), discharge[1:], color=color, marker='o', linestyle='-')
+        ax2.plot(years[1:], discharge[1:], color=color, marker='o', linestyle='-')
         ax2.tick_params(axis='y', labelcolor=color)
 
         fig.tight_layout()
