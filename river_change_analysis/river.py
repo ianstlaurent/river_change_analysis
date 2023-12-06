@@ -359,10 +359,10 @@ class River:
             Erosion and accretion of the river.
         """
         for i in range(1, len(annual_data)):
-            if annual_data[i].watermask is None:
-                annual_data[i].water_mask_process(WATER_MASK_MIN_SIZE)
-            erosion = (annual_data[i].watermask.astype(int) - annual_data[i-1].watermask.astype(int)) > 0
-            accretion = (annual_data[i-1].watermask.astype(int) - annual_data[i].watermask.astype(int)) > 0
+            #if annual_data[i].watermask is None:
+            #    annual_data[i].water_mask_process(WATER_MASK_MIN_SIZE)
+            accretion = (annual_data[i].mask.astype(int) - annual_data[i-1].mask.astype(int)) > 0
+            erosion = (annual_data[i-1].mask.astype(int) - annual_data[i].mask.astype(int)) > 0
             # Calculate the area of erosion and accretion
             annual_data[i].erosion = np.sum(erosion * (30**2)) / 1000000
             annual_data[i].accretion = np.sum(accretion * (30**2)) / 1000000
