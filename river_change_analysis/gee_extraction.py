@@ -132,7 +132,7 @@ def process_images(start_year, end_year, month_day_start, month_day_end, roi, fo
         imgCol = merged.filterDate(sDate_T1, eDate_T1).filterBounds(roi).map(removeCloudPixels)
 
         # Define and rename quantiles of interest:
-        bnp50 = ['uBlue_p50', 'Blue_p50', 'Green_p50', 'Red_p50', 'Swir1_p50', 'BQA_p50', 'Nir_p50', 'Swir2_p50']
+        bnp50 = ['uBlue_p50', 'Blue_p50', 'Green_p50', 'Red_p50', 'Nir_p50', 'Swir1_p50', 'Swir2_p50', 'QA_PIXEL_p50']
         p50 = imgCol.reduce(ee.Reducer.percentile([50])).select(bnp50, commonBands)
 
         # Apply to each percentile:
