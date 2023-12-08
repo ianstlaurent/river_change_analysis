@@ -102,38 +102,36 @@ def process_images(start_year, end_year, month_day_start, month_day_end, roi, fo
     ndvi_param = 0.20
     cleaning_pixels = 100
 
-    # Define your bands.
-    l9 = ['SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B6', 'SR_B5', 'SR_B7', 'QA_PIXEL']
-    l8 = ['SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B6', 'SR_B5', 'SR_B7', 'QA_PIXEL']
-    l7 = ['SR_B1', 'SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B7', 'QA_PIXEL']
-    l5 = ['SR_B1', 'SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B7', 'QA_PIXEL']
-    commonBands = ['uBlue', 'Blue', 'Green', 'Red', 'Nir', 'Swir1', 'Swir2', 'QA_PIXEL']
+    # Band names for different Landsat sensors
+    bn8 = ['B1', 'B2', 'B3', 'B4', 'B6', 'pixel_qa', 'B5', 'B7']
+    bn7 = ['B1', 'B1', 'B2', 'B3', 'B5', 'pixel_qa', 'B4', 'B7']
+    bn5 = ['B1', 'B1', 'B2', 'B3', 'B5', 'pixel_qa', 'B4', 'B7']
+    bns = ['uBlue', 'Blue', 'Green', 'Red', 'Swir1', 'BQA', 'Nir', 'Swir2']
 
-    # Define your image collections.
-    ls5_l2 = ee.ImageCollection("LANDSAT/LT05/C02/T1_L2").select(l5, commonBands)
-    ls7_l2 = ee.ImageCollection("LANDSAT/LE07/C02/T1_L2").select(l7, commonBands)
-    ls8_l2 = ee.ImageCollection("LANDSAT/LC08/C02/T1_L2").select(l8, commonBands)
-    ls9_l2 = ee.ImageCollection("LANDSAT/LC09/C02/T1_L2").select(l9, commonBands)
-    merged = ls5_l2.merge(ls7_l2).merge(ls8_l2).merge(ls9_l2)
+    # Image collections for different Landsat sensors
+    ls5 = ee.ImageCollection("LANDSAT/LT05/C01/T1_SR").filterDate('1985-04-01', '1999-04-15').select(bn5, bns)
+    ls7 = ee.ImageCollection("LANDSAT/LE07/C01/T1_SR").select(bn7, bns)
+    ls8 = ee.ImageCollection("LANDSAT/LC08/C01/T1_SR").select(bn8, bns)
+    merged = ls5.merge(ls7).merge(ls8)  # Merge all collections into one
 
     for year in range(start_year, end_year+1):
         sDate_T1 = str(year) + month_day_start  # Start date for filtering
         eDate_T1 = str(year) + month_day_end  # End date for filtering
 
         # Filter date range, roi and apply simple cloud processing:
-        def removeCloudPixels(image):
-            qa = image.select('QA_PIXEL')
-            cloudMask = qa.bitwiseAnd(1 << 3).neq(0)
-            cloudDilated = qa.bitwiseAnd(1 << 1).neq(0)
-            cloudCombined = cloudMask.Or(cloudDilated)
-            return image.updateMask(cloudCombined.Not()).clip(roi)
+        def mask_clouds(image):
+            """Mask clouds and cloud shadows in an image."""
+            cloudShadowBitMask = 1 << 3
+            cloudsBitMask = 1 << 5
+            qa = image.select('BQA')
+            mask = qa.bitwiseAnd(cloudShadowBitMask).eq(0).And(qa.bitwiseAnd(cloudsBitMask).eq(0))
+            return image.updateMask(mask).multiply(0.0001).clip(roi)
 
-        # Filter date range, roi and apply simple cloud processing:
-        imgCol = merged.filterDate(sDate_T1, eDate_T1).filterBounds(roi).map(removeCloudPixels)
+        imgCol = merged.filterDate(sDate_T1, eDate_T1).filterBounds(roi).map(mask_clouds)
 
         # Define and rename quantiles of interest:
-        bnp50 = ['uBlue_p50', 'Blue_p50', 'Green_p50', 'Red_p50', 'Nir_p50', 'Swir1_p50', 'Swir2_p50', 'QA_PIXEL_p50']
-        p50 = imgCol.reduce(ee.Reducer.percentile([50])).select(bnp50, commonBands)
+        bnp50 = ['uBlue_p50', 'Blue_p50', 'Green_p50', 'Red_p50', 'Swir1_p50', 'BQA_p50', 'Nir_p50', 'Swir2_p50']
+        p50 = imgCol.reduce(ee.Reducer.percentile([50])).select(bnp50, bns)
 
         # Apply to each percentile:
         mndwi_p50 = Mndwi(p50)
@@ -145,13 +143,13 @@ def process_images(start_year, end_year, month_day_start, month_day_end, roi, fo
         waterMasked_p50 = water_p50.updateMask(water_p50.gt(0))
 
         # Active river belt classification:
-        #activebelt_p50 = mndwi_p50.gte(mndwi_param).And(ndvi_p50.lte(ndvi_param))
-        #activebeltMasked_p50 = activebelt_p50.updateMask(activebelt_p50.gt(0))
-        #active_p50 = water_p50.Or(activebelt_p50)
+        activebelt_p50 = mndwi_p50.gte(mndwi_param).And(ndvi_p50.lte(ndvi_param))
+        activebeltMasked_p50 = activebelt_p50.updateMask(activebelt_p50.gt(0))
+        active_p50 = water_p50.Or(activebelt_p50)
 
         # Clean binary active channel:
-        smooth_map_p50 = waterMasked_p50.focal_mode(radius=10, kernelType='octagon', units='pixels', iterations=1).mask(waterMasked_p50.gte(1))
-        noise_removal_p50 = waterMasked_p50.updateMask(waterMasked_p50.connectedPixelCount(cleaning_pixels, False).gte(cleaning_pixels)).unmask(smooth_map_p50)
+        smooth_map_p50 = active_p50.focal_mode(radius=10, kernelType='octagon', units='pixels', iterations=1).mask(active_p50.gte(1))
+        noise_removal_p50 = active_p50.updateMask(active_p50.connectedPixelCount(cleaning_pixels, False).gte(cleaning_pixels)).unmask(smooth_map_p50)
         noise_removal_p50_Masked = noise_removal_p50.updateMask(noise_removal_p50.gt(0))
         river_mask = noise_removal_p50_Masked
 
